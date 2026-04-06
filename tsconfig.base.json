@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "baseUrl": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@website-auditor/shared": [
+        "packages/shared/src/index.ts"
+      ],
+      "@website-auditor/db": [
+        "packages/db/src/index.ts"
+      ],
+      "@website-auditor/audit-engine": [
+        "packages/audit-engine/src/index.ts"
+      ]
+    },
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "5.0"
+  }
+}

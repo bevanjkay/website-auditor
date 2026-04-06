@@ -1,0 +1,24 @@
+{
+  "name": "website-auditor",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "bump:version": "node scripts/bump-version.mjs",
+    "check:playwright": "node scripts/check-playwright-version.mjs",
+    "lint": "pnpm check:playwright && eslint .",
+    "lint:fix": "pnpm check:playwright && eslint . --fix",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^8.0.0",
+    "@types/node": "^24.7.2",
+    "@types/nspell": "^2.1.6",
+    "eslint": "^9.26.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

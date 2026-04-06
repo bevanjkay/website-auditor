@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+.pnpm-store
+.nuxt
+.output
+dist
+coverage
+.env
+.DS_Store
+playwright-report
+test-results
+apps/web/.data
+postgres-data
+redis-data

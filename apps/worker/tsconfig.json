@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "declaration": true,
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "../../packages/audit-engine/src/**/*.d.ts"
+  ]
+}
