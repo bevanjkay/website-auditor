@@ -304,22 +304,6 @@ function removeLighthouseTarget(target: string) {
             {{ websiteData?.website.baseUrl }}
           </p>
         </div>
-
-        <div class="nav-links">
-          <button
-            class="button button-primary"
-            :disabled="runPending || !discovery?.included"
-            @click="runAudit"
-          >
-            {{ runPending ? 'Queueing…' : 'Run filtered audit' }}
-          </button>
-          <button
-            :disabled="discoveryPending"
-            @click="refreshDiscovery()"
-          >
-            {{ discoveryPending ? 'Refreshing…' : 'Refresh discovery' }}
-          </button>
-        </div>
       </div>
 
       <div class="metric-grid">
@@ -348,6 +332,46 @@ function removeLighthouseTarget(target: string) {
         {{ errorMessage }}
       </p>
     </div>
+
+    <section class="panel stack">
+      <h3>Recent audits</h3>
+      <table
+        v-if="auditsData?.auditRuns.length"
+        class="table"
+      >
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Status</th>
+            <th>Started</th>
+            <th>Finished</th>
+            <th>Issues</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="audit in auditsData.auditRuns"
+            :key="audit.id"
+          >
+            <td>
+              <NuxtLink :to="`/audits/${audit.id}`">
+                {{ audit.id }}
+              </NuxtLink>
+            </td>
+            <td><StatusPill :value="audit.status" /></td>
+            <td>{{ audit.startedAt ? new Date(audit.startedAt).toLocaleString() : 'Queued' }}</td>
+            <td>{{ audit.finishedAt ? new Date(audit.finishedAt).toLocaleString() : 'Running' }}</td>
+            <td>{{ audit.issueCount }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div
+        v-else
+        class="empty"
+      >
+        No audit runs yet.
+      </div>
+    </section>
 
     <div class="split">
       <section class="panel stack">
@@ -478,10 +502,16 @@ function removeLighthouseTarget(target: string) {
                 </p>
               </div>
               <div class="preset-actions">
-                <button @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)">
+                <button
+                  class="secondary-button"
+                  @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
+                >
                   Add to allowlist
                 </button>
-                <button @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)">
+                <button
+                  class="secondary-button"
+                  @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
+                >
                   Add to denylist
                 </button>
               </div>
@@ -509,10 +539,16 @@ function removeLighthouseTarget(target: string) {
                 </p>
               </div>
               <div class="preset-actions">
-                <button @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)">
+                <button
+                  class="secondary-button"
+                  @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
+                >
                   Add to allowlist
                 </button>
-                <button @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)">
+                <button
+                  class="secondary-button"
+                  @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
+                >
                   Add to denylist
                 </button>
               </div>
@@ -523,6 +559,31 @@ function removeLighthouseTarget(target: string) {
 
       <aside class="stack">
         <section class="panel stack">
+          <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
+            <div>
+              <h3>Run next audit</h3>
+              <p class="muted">
+                Review the latest runs first, then adjust discovery and rules before queueing another audit.
+              </p>
+            </div>
+            <div class="nav-links">
+              <button
+                class="button button-primary"
+                :disabled="runPending || !discovery?.included"
+                @click="runAudit"
+              >
+                {{ runPending ? 'Queueing…' : 'Run filtered audit' }}
+              </button>
+              <button
+                class="secondary-button"
+                :disabled="discoveryPending"
+                @click="refreshDiscovery()"
+              >
+                {{ discoveryPending ? 'Refreshing…' : 'Refresh discovery' }}
+              </button>
+            </div>
+          </div>
+
           <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
             <div>
               <h3>Crawl rules</h3>
@@ -628,7 +689,10 @@ function removeLighthouseTarget(target: string) {
           <div class="stack">
             <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
               <h4>Allowlist</h4>
-              <button @click="addRule('allow')">
+              <button
+                class="secondary-button"
+                @click="addRule('allow')"
+              >
                 Add allow rule
               </button>
             </div>
@@ -654,7 +718,10 @@ function removeLighthouseTarget(target: string) {
                   v-model="rule.pattern"
                   placeholder="https://example.com/blog/**"
                 >
-                <button @click="removeRule('allow', index)">
+                <button
+                  class="secondary-button"
+                  @click="removeRule('allow', index)"
+                >
                   Remove
                 </button>
               </div>
@@ -670,7 +737,10 @@ function removeLighthouseTarget(target: string) {
           <div class="stack">
             <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
               <h4>Denylist</h4>
-              <button @click="addRule('deny')">
+              <button
+                class="secondary-button"
+                @click="addRule('deny')"
+              >
                 Add deny rule
               </button>
             </div>
@@ -696,7 +766,10 @@ function removeLighthouseTarget(target: string) {
                   v-model="rule.pattern"
                   placeholder="**/tag/**"
                 >
-                <button @click="removeRule('deny', index)">
+                <button
+                  class="secondary-button"
+                  @click="removeRule('deny', index)"
+                >
                   Remove
                 </button>
               </div>
@@ -736,45 +809,5 @@ function removeLighthouseTarget(target: string) {
         </section>
       </aside>
     </div>
-
-    <section class="panel stack">
-      <h3>Audit history</h3>
-      <table
-        v-if="auditsData?.auditRuns.length"
-        class="table"
-      >
-        <thead>
-          <tr>
-            <th>Run</th>
-            <th>Status</th>
-            <th>Started</th>
-            <th>Finished</th>
-            <th>Issues</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="audit in auditsData.auditRuns"
-            :key="audit.id"
-          >
-            <td>
-              <NuxtLink :to="`/audits/${audit.id}`">
-                {{ audit.id }}
-              </NuxtLink>
-            </td>
-            <td><StatusPill :value="audit.status" /></td>
-            <td>{{ audit.startedAt ? new Date(audit.startedAt).toLocaleString() : 'Queued' }}</td>
-            <td>{{ audit.finishedAt ? new Date(audit.finishedAt).toLocaleString() : 'Running' }}</td>
-            <td>{{ audit.issueCount }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div
-        v-else
-        class="empty"
-      >
-        No audit runs yet.
-      </div>
-    </section>
   </section>
 </template>

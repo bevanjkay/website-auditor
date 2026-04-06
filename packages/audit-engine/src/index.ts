@@ -1033,7 +1033,7 @@ function stripNonProseText(text: string): string {
 function tokenize(text: string): string[] {
   return stripNonProseText(text)
     .split(/[^A-Z']+/gi)
-    .map(token => token.trim().toLowerCase())
+    .map(token => token.trim())
     .filter(token => token.length >= 3);
 }
 
@@ -1102,19 +1102,23 @@ export async function detectTypos(
   allowlist: string[] = [],
 ): Promise<TypoMatch[]> {
   const spell = await getSpellChecker(language);
-  const uniqueWords = [...new Set(tokenize(text))];
+  const uniqueWords = [...new Map(tokenize(text)
+    .map(word => [word.toLowerCase(), word] as const))
+    .values()];
   const localAllowlist = new Set(allowlist.map(word => word.toLowerCase()));
 
   return uniqueWords.flatMap((word) => {
-    if (typoAllowList.has(word)) {
+    const normalizedWord = word.toLowerCase();
+
+    if (typoAllowList.has(normalizedWord)) {
       return [];
     }
 
-    if (/^[0-9-]+$/.test(word)) {
+    if (/^[0-9-]+$/.test(normalizedWord)) {
       return [];
     }
 
-    if (localAllowlist.has(word)) {
+    if (localAllowlist.has(normalizedWord)) {
       return [];
     }
 

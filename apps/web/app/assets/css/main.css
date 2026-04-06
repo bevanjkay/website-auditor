@@ -546,6 +546,50 @@ select {
   margin: 0;
 }
 
+.report-item {
+  border-radius: 12px;
+}
+
+.report-item summary {
+  list-style: none;
+}
+
+.report-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.report-item-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  cursor: pointer;
+}
+
+.report-item-body {
+  margin-top: 12px;
+}
+
+.markdown-copy p {
+  margin: 0;
+}
+
+.markdown-copy p + p {
+  margin-top: 10px;
+}
+
+.markdown-copy a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.markdown-copy code {
+  padding: 0.12rem 0.35rem;
+  border-radius: 8px;
+  background: rgba(22, 33, 31, 0.08);
+  font-size: 0.95em;
+}
+
 .rule-row {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr) auto;
