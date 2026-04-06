@@ -14,7 +14,7 @@ Website Auditor is a self-hosted Docker service for developers to inspect their 
 
 ## Getting Started
 
-The standard install path is Docker Compose using [docker-compose.yml](/Users/bevankay/github/website-auditor/docker-compose.yml).
+The standard install path is Docker Compose using [docker-compose.yml](./docker-compose.yml).
 
 1. Copy `.env.example` to `.env` and set `SESSION_SECRET`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD`.
 2. Start the stack with `docker compose up -d`.
@@ -31,8 +31,8 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 ## Environment Variables
 
-- `WEB_IMAGE`: Optional override for the deployed web image. Defaults to `ghcr.io/bevankay/website-auditor-web:main`.
-- `WORKER_IMAGE`: Optional override for the deployed worker image. Defaults to `ghcr.io/bevankay/website-auditor-worker:main`.
+- `WEB_IMAGE`: Optional override for the deployed web image. Defaults to `ghcr.io/bevankay/website-auditor-web:latest`.
+- `WORKER_IMAGE`: Optional override for the deployed worker image. Defaults to `ghcr.io/bevankay/website-auditor-worker:latest`.
 - `DATABASE_URL`: PostgreSQL connection string.
 - `REDIS_URL`: Redis connection string.
 - `SESSION_SECRET`: Cookie signing secret.

@@ -9,4 +9,10 @@ describe("password hashing", () => {
     await expect(verifyPassword("super-secret-password", hash)).resolves.toBe(true);
     await expect(verifyPassword("wrong-password", hash)).resolves.toBe(false);
   });
+
+  it("returns false for malformed stored hashes", async () => {
+    await expect(verifyPassword("super-secret-password", "bad-format")).resolves.toBe(false);
+    await expect(verifyPassword("super-secret-password", "salt:not-hex")).resolves.toBe(false);
+    await expect(verifyPassword("super-secret-password", "salt:1234")).resolves.toBe(false);
+  });
 });

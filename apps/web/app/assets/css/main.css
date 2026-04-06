@@ -592,7 +592,7 @@ select {
 .secondary-button {
   border: 1px solid rgba(22, 33, 31, 0.14);
   background: rgba(255, 255, 255, 0.8);
-  color: var(--ink);
+  color: var(--text);
   padding: 0.7rem 1rem;
   border-radius: 999px;
   font: inherit;

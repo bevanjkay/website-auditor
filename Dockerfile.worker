@@ -11,6 +11,6 @@ WORKDIR /app
 COPY . .
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter @website-auditor/worker build
+RUN pnpm --filter @website-auditor/worker... build
 
 CMD ["pnpm", "--filter", "@website-auditor/worker", "start"]
