@@ -1,0 +1,12 @@
+services:
+  web:
+    image: website-auditor-web:local
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+
+  worker:
+    image: website-auditor-worker:local
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
