@@ -136,6 +136,10 @@ describe("audit-engine helpers", () => {
     ]);
   });
 
+  it("preserves original casing for case-sensitive dictionary words", async () => {
+    await expect(detectTypos("Watch on YouTube from your iPhone.")).resolves.toEqual([]);
+  });
+
   it("returns spelling suggestions and suppresses allowlisted words", async () => {
     const matches = await detectTypos("langing", "en");
     expect(matches).toEqual([

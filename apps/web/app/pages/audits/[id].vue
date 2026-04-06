@@ -266,6 +266,33 @@ function formatMetric(value: number | null | undefined, suffix = "ms") {
   return `${Math.round(value)}${suffix}`;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderAuditMarkdown(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const rendered = escapeHtml(trimmed)
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_match, label: string, url: string) => {
+      return `<a href="${url}" target="_blank" rel="noreferrer noopener">${label}</a>`;
+    })
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  return rendered
+    .split(/\n{2,}/)
+    .map(block => `<p>${block.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
+
 function scoreTone(score: number | null | undefined) {
   if (score === null || score === undefined) {
     return "muted";
@@ -590,84 +617,87 @@ onBeforeUnmount(() => {
                   :key="finding.id"
                   class="lighthouse-finding"
                 >
-                  <header>
-                    <div class="issue-header">
-                      <span class="pill" :class="scoreTone(finding.score)">
-                        {{ finding.category }}
+                  <details class="report-item">
+                    <summary class="report-item-summary">
+                      <div class="issue-header">
+                        <span class="pill" :class="scoreTone(finding.score)">
+                          {{ finding.category }}
+                        </span>
+                        <strong>{{ finding.title }}</strong>
+                      </div>
+                      <span class="muted">
+                        {{ finding.score ?? 'n/a' }}
                       </span>
-                      <strong>{{ finding.title }}</strong>
+                    </summary>
+
+                    <div class="report-item-body stack">
+                      <div
+                        v-if="finding.description"
+                        class="muted markdown-copy"
+                        v-html="renderAuditMarkdown(finding.description)"
+                      />
+                      <p
+                        v-if="finding.displayValue"
+                        class="muted"
+                      >
+                        Lighthouse: {{ finding.displayValue }}
+                      </p>
+                      <div
+                        v-if="finding.targets?.length"
+                        class="lighthouse-targets stack"
+                      >
+                        <div class="section-label">
+                          Possible code targets
+                        </div>
+                        <div
+                          v-for="(target, targetIndex) in finding.targets"
+                          :key="`${finding.id}-${target.kind}-${targetIndex}`"
+                          class="lighthouse-target"
+                        >
+                          <template v-if="target.kind === 'node'">
+                            <p v-if="target.nodeLabel"><strong>{{ target.nodeLabel }}</strong></p>
+                            <p
+                              v-if="target.selector"
+                              class="muted"
+                            >
+                              Selector: <code>{{ target.selector }}</code>
+                            </p>
+                            <pre v-if="target.snippet">{{ target.snippet }}</pre>
+                            <p
+                              v-if="target.path"
+                              class="muted"
+                            >
+                              DOM path: {{ target.path }}
+                            </p>
+                            <div
+                              v-if="target.explanation"
+                              class="muted markdown-copy"
+                              v-html="renderAuditMarkdown(target.explanation)"
+                            />
+                          </template>
+                          <template v-else-if="target.kind === 'source-location'">
+                            <p><strong>Source location</strong></p>
+                            <p
+                              v-if="formatSourceLocation(target)"
+                              class="muted"
+                            >
+                              {{ formatSourceLocation(target) }}
+                            </p>
+                            <p
+                              v-if="target.url && target.originalFile"
+                              class="muted"
+                            >
+                              Generated: {{ target.url }}:{{ target.line ?? '?' }}:{{ target.column ?? '?' }}
+                            </p>
+                          </template>
+                          <template v-else-if="target.kind === 'url'">
+                            <p><strong>Related URL</strong></p>
+                            <p class="muted">{{ target.url }}</p>
+                          </template>
+                        </div>
+                      </div>
                     </div>
-                    <span class="muted">
-                      {{ finding.score ?? 'n/a' }}
-                    </span>
-                  </header>
-                  <p
-                    v-if="finding.description"
-                    class="muted"
-                  >
-                    {{ finding.description }}
-                  </p>
-                  <p
-                    v-if="finding.displayValue"
-                    class="muted"
-                  >
-                    Lighthouse: {{ finding.displayValue }}
-                  </p>
-                  <div
-                    v-if="finding.targets?.length"
-                    class="lighthouse-targets stack"
-                  >
-                    <div class="section-label">
-                      Possible code targets
-                    </div>
-                    <div
-                      v-for="(target, targetIndex) in finding.targets"
-                      :key="`${finding.id}-${target.kind}-${targetIndex}`"
-                      class="lighthouse-target"
-                    >
-                      <template v-if="target.kind === 'node'">
-                        <p v-if="target.nodeLabel"><strong>{{ target.nodeLabel }}</strong></p>
-                        <p
-                          v-if="target.selector"
-                          class="muted"
-                        >
-                          Selector: <code>{{ target.selector }}</code>
-                        </p>
-                        <pre v-if="target.snippet">{{ target.snippet }}</pre>
-                        <p
-                          v-if="target.path"
-                          class="muted"
-                        >
-                          DOM path: {{ target.path }}
-                        </p>
-                        <p
-                          v-if="target.explanation"
-                          class="muted"
-                        >
-                          {{ target.explanation }}
-                        </p>
-                      </template>
-                      <template v-else-if="target.kind === 'source-location'">
-                        <p><strong>Source location</strong></p>
-                        <p
-                          v-if="formatSourceLocation(target)"
-                          class="muted"
-                        >
-                          {{ formatSourceLocation(target) }}
-                        </p>
-                        <p
-                          v-if="target.url && target.originalFile"
-                          class="muted"
-                        >
-                          Generated: {{ target.url }}:{{ target.line ?? '?' }}:{{ target.column ?? '?' }}
-                        </p>
-                      </template>
-                      <template v-else-if="target.kind === 'url'">
-                        <p><strong>Related URL</strong></p>
-                        <p class="muted">{{ target.url }}</p>
-                      </template>
-                    </div>
-                  </div>
+                  </details>
                 </div>
               </div>
               <div
@@ -760,55 +790,60 @@ onBeforeUnmount(() => {
                 :key="issue.id"
                 class="issue issue-compact"
               >
-                <header>
-                  <div class="issue-header">
-                    <StatusPill :value="issue.severity" />
-                    <strong>{{ issue.title }}</strong>
-                  </div>
-                </header>
-                <p>{{ issue.message }}</p>
-                <p
-                  v-if="issue.pageUrl"
-                  class="muted"
-                >
-                  {{ issue.pageUrl }}
-                </p>
-                <div
-                  v-if="issue.code === 'possible_typos' && getTypoIssueWords(issue).length"
-                  class="typo-match-list stack"
-                >
-                  <div
-                    v-for="match in getTypoIssueWords(issue)"
-                    :key="`${issue.id}:${match.word}`"
-                    class="typo-match-item"
-                  >
-                    <div class="typo-match-copy">
-                      <strong>{{ match.word }}</strong>
-                      <p
-                        v-if="match.suggestions.length"
-                        class="muted"
-                      >
-                        Suggestions: {{ match.suggestions.join(', ') }}
-                      </p>
-                      <p
-                        v-else
-                        class="muted"
-                      >
-                        No spelling suggestions available.
-                      </p>
+                <details class="report-item">
+                  <summary class="report-item-summary">
+                    <div class="issue-header">
+                      <StatusPill :value="issue.severity" />
+                      <strong>{{ issue.title }}</strong>
                     </div>
-                    <button
-                      class="secondary-button"
-                      :disabled="isAllowingTypo(issue.id, match.word)"
-                      @click="allowTypoWord(issue.id, match.word)"
+                  </summary>
+
+                  <div class="report-item-body stack">
+                    <p>{{ issue.message }}</p>
+                    <p
+                      v-if="issue.pageUrl"
+                      class="muted"
                     >
-                      {{ isAllowingTypo(issue.id, match.word) ? 'Allowing…' : 'Allow for this site' }}
-                    </button>
+                      {{ issue.pageUrl }}
+                    </p>
+                    <div
+                      v-if="issue.code === 'possible_typos' && getTypoIssueWords(issue).length"
+                      class="typo-match-list stack"
+                    >
+                      <div
+                        v-for="match in getTypoIssueWords(issue)"
+                        :key="`${issue.id}:${match.word}`"
+                        class="typo-match-item"
+                      >
+                        <div class="typo-match-copy">
+                          <strong>{{ match.word }}</strong>
+                          <p
+                            v-if="match.suggestions.length"
+                            class="muted"
+                          >
+                            Suggestions: {{ match.suggestions.join(', ') }}
+                          </p>
+                          <p
+                            v-else
+                            class="muted"
+                          >
+                            No spelling suggestions available.
+                          </p>
+                        </div>
+                        <button
+                          class="secondary-button"
+                          :disabled="isAllowingTypo(issue.id, match.word)"
+                          @click="allowTypoWord(issue.id, match.word)"
+                        >
+                          {{ isAllowingTypo(issue.id, match.word) ? 'Allowing…' : 'Allow for this site' }}
+                        </button>
+                      </div>
+                    </div>
+                    <pre
+                      v-else-if="issue.evidenceJson && Object.keys(issue.evidenceJson).length"
+                    >{{ issue.evidenceJson }}</pre>
                   </div>
-                </div>
-                <pre
-                  v-else-if="issue.evidenceJson && Object.keys(issue.evidenceJson).length"
-                >{{ issue.evidenceJson }}</pre>
+                </details>
               </article>
             </section>
           </div>

@@ -7,8 +7,12 @@ on:
   push:
     branches:
       - main
-      - feat/**
   workflow_call:
+    inputs:
+      run_build:
+        required: false
+        type: boolean
+        default: true
 
 permissions: {}
 
@@ -48,4 +52,5 @@ jobs:
         run: pnpm test
 
       - name: Build project
+        if: github.event_name != 'push' && inputs.run_build
         run: pnpm build
