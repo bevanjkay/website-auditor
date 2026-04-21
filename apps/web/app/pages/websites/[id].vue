@@ -293,23 +293,22 @@ function removeLighthouseTarget(target: string) {
 
 <template>
   <section class="stack">
+    <!-- Website identity + quick metrics -->
     <div class="hero-card stack">
-      <div style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: start;">
-        <div>
-          <p class="muted">
-            Website
-          </p>
-          <h2>{{ websiteData?.website.name }}</h2>
-          <p class="muted">
-            {{ websiteData?.website.baseUrl }}
-          </p>
-        </div>
+      <div>
+        <p class="muted">
+          Website
+        </p>
+        <h2>{{ websiteData?.website.name }}</h2>
+        <p class="muted">
+          {{ websiteData?.website.baseUrl }}
+        </p>
       </div>
 
       <div class="metric-grid">
         <MetricCard
           label="Latest status"
-          :value="websiteData?.website.latestRun?.status ?? 'queued'"
+          :value="websiteData?.website.latestRun?.status ?? 'no runs'"
         />
         <MetricCard
           label="Preview URLs"
@@ -333,8 +332,24 @@ function removeLighthouseTarget(target: string) {
       </p>
     </div>
 
+    <!-- Recent audits: prominent, with issue mix accordion below -->
     <section class="panel stack">
-      <h3>Recent audits</h3>
+      <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div>
+          <h3>Recent audits</h3>
+          <p class="muted">
+            Click a run to review its full report.
+          </p>
+        </div>
+        <button
+          class="button button-primary"
+          :disabled="runPending || !discovery?.included"
+          @click="runAudit"
+        >
+          {{ runPending ? 'Queueing…' : 'Run new audit' }}
+        </button>
+      </div>
+
       <table
         v-if="auditsData?.auditRuns.length"
         class="table"
@@ -371,319 +386,143 @@ function removeLighthouseTarget(target: string) {
       >
         No audit runs yet.
       </div>
-    </section>
 
-    <div class="split">
-      <section class="panel stack">
-        <div style="display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap;">
+      <!-- Latest issue mix: accordion anchored below the runs table -->
+      <details
+        v-if="websiteData?.latestIssueSummary && Object.keys(websiteData.latestIssueSummary).length"
+        class="collapsible-section"
+      >
+        <summary class="collapsible-summary">
           <div>
-            <h3>Discovery preview</h3>
+            <h3>Latest issue mix</h3>
             <p class="muted">
-              Sitemap candidates are loaded first. If no sitemap is found, the homepage is used for a shallow internal-link seed pass.
+              Issue counts from the most recent completed run.
             </p>
           </div>
-          <div class="stack" style="gap: 4px; text-align: right;">
-            <span class="muted">Source: {{ discovery?.source ?? 'n/a' }}</span>
-            <span class="muted">Generated: {{ discovery?.generatedAt ? new Date(discovery.generatedAt).toLocaleString() : 'Pending' }}</span>
-          </div>
-        </div>
-
-        <div
-          v-if="discovery"
-          class="stack"
-        >
-          <div class="split" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-            <section class="issue stack">
-              <header>
-                <strong>Included URLs</strong>
-                <span>{{ includedEntries.length }}</span>
-              </header>
-              <div
-                v-if="includedEntries.length"
-                class="preview-list"
-              >
-                <div
-                  v-for="entry in includedEntries"
-                  :key="entry.url"
-                  class="preview-item"
-                >
-                  <div>
-                    <strong>{{ entry.url }}</strong>
-                    <p class="muted">{{ entry.source }}</p>
-                  </div>
-                  <span
-                    v-if="entry.matchedRule"
-                    class="muted"
-                  >
-                    {{ entry.matchedRule.mode }} · {{ entry.matchedRule.matcher }}
-                  </span>
-                </div>
-              </div>
-              <div
-                v-else
-                class="empty"
-              >
-                No URLs are currently included.
-              </div>
-            </section>
-
-            <section class="issue stack">
-              <header>
-                <strong>Excluded URLs</strong>
-                <span>{{ excludedEntries.length }}</span>
-              </header>
-              <div
-                v-if="excludedEntries.length"
-                class="preview-list"
-              >
-                <div
-                  v-for="entry in excludedEntries"
-                  :key="entry.url"
-                  class="preview-item"
-                >
-                  <div>
-                    <strong>{{ entry.url }}</strong>
-                    <p class="muted">{{ entry.source }}</p>
-                  </div>
-                  <span class="muted">
-                    {{ entry.matchedRule ? `${entry.matchedRule.mode} · ${entry.matchedRule.matcher}` : 'No allow rule matched' }}
-                  </span>
-                </div>
-              </div>
-              <div
-                v-else
-                class="empty"
-              >
-                No URLs are excluded by the current rules.
-              </div>
-            </section>
-          </div>
-        </div>
-        <div
-          v-else-if="discoveryPending"
-          class="empty"
-        >
-          Loading discovery preview in the background…
-        </div>
-        <div
-          v-else
-          class="empty"
-        >
-          Discovery preview has not loaded yet.
-        </div>
-
-        <section
-          v-if="allowSuggestions.length || denySuggestions.length"
-          class="issue stack"
-        >
-          <header>
-            <strong>Rule presets</strong>
-            <span>{{ allowSuggestions.length + denySuggestions.length }}</span>
-          </header>
-
+          <span class="muted">Show breakdown</span>
+        </summary>
+        <div class="stack" style="margin-top: 16px;">
           <div
-            v-if="allowSuggestions.length"
-            class="stack"
-            style="gap: 12px;"
+            v-for="(count, category) in websiteData.latestIssueSummary"
+            :key="category"
+            class="issue"
           >
-            <strong>Suggested allow presets</strong>
-            <div
-              v-for="suggestion in allowSuggestions"
-              :key="`allow-${suggestion.matcher}:${suggestion.pattern}`"
-              class="preview-item"
-            >
-              <div>
-                <strong>{{ suggestion.pattern }}</strong>
-                <p class="muted">
-                  {{ suggestion.reason }} · matches {{ suggestion.matchedCount }} URL{{ suggestion.matchedCount === 1 ? '' : 's' }}
-                </p>
-                <p class="muted">
-                  {{ suggestion.exampleUrls.join(' · ') }}
-                </p>
-              </div>
-              <div class="preset-actions">
-                <button
-                  class="secondary-button"
-                  @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
-                >
-                  Add to allowlist
-                </button>
-                <button
-                  class="secondary-button"
-                  @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
-                >
-                  Add to denylist
-                </button>
-              </div>
-            </div>
+            <header>
+              <strong>{{ category }}</strong>
+              <span>{{ count }}</span>
+            </header>
           </div>
+        </div>
+      </details>
+    </section>
 
-          <div
-            v-if="denySuggestions.length"
-            class="stack"
-            style="gap: 12px;"
+    <!-- Combined crawl settings + discovery preview -->
+    <section class="panel stack">
+      <div style="display: flex; justify-content: space-between; gap: 16px; align-items: start; flex-wrap: wrap;">
+        <div>
+          <h3>Crawl settings</h3>
+          <p class="muted">
+            Configure rules and review discovery before queueing an audit. Allowlist runs first; denylist wins on conflict.
+          </p>
+        </div>
+        <div class="nav-links">
+          <button
+            class="secondary-button"
+            :disabled="rulesPending"
+            @click="saveRules"
           >
-            <strong>Suggested deny presets</strong>
-            <div
-              v-for="suggestion in denySuggestions"
-              :key="`deny-${suggestion.matcher}:${suggestion.pattern}`"
-              class="preview-item"
+            {{ rulesPending ? 'Saving…' : 'Save rules' }}
+          </button>
+          <button
+            class="secondary-button"
+            :disabled="discoveryPending"
+            @click="refreshDiscovery()"
+          >
+            {{ discoveryPending ? 'Refreshing…' : 'Refresh discovery' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="split">
+        <!-- Left: configuration -->
+        <div class="stack">
+          <div class="field">
+            <label for="typo-language">Typo audit language</label>
+            <select
+              id="typo-language"
+              v-model="typoLanguage"
             >
-              <div>
-                <strong>{{ suggestion.pattern }}</strong>
-                <p class="muted">
-                  {{ suggestion.reason }} · matches {{ suggestion.matchedCount }} URL{{ suggestion.matchedCount === 1 ? '' : 's' }}
-                </p>
-                <p class="muted">
-                  {{ suggestion.exampleUrls.join(' · ') }}
-                </p>
-              </div>
-              <div class="preset-actions">
-                <button
-                  class="secondary-button"
-                  @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
+              <option
+                v-for="option in typoLanguageOptions"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="lighthouse-targets">Additional Lighthouse URLs</label>
+            <div class="picker stack">
+              <div class="picker-selected">
+                <span
+                  v-for="target in lighthouseTargets"
+                  :key="target"
+                  class="picker-chip"
                 >
-                  Add to allowlist
+                  <span>{{ target }}</span>
+                  <button @click="removeLighthouseTarget(target)">
+                    Remove
+                  </button>
+                </span>
+                <span
+                  v-if="!lighthouseTargets.length"
+                  class="muted"
+                >
+                  No additional Lighthouse URLs selected.
+                </span>
+              </div>
+              <div class="picker-search">
+                <input
+                  id="lighthouse-targets"
+                  v-model="lighthouseSearch"
+                  type="search"
+                  placeholder="Search discovered pages or paste a full URL"
+                  @focus="lighthouseSearchFocused = true"
+                  @blur="lighthouseSearchFocused = false"
+                >
+              </div>
+              <div
+                v-if="lighthouseSearchFocused || lighthouseSearch"
+                class="picker-dropdown"
+              >
+                <button
+                  v-for="target in filteredLighthouseOptions"
+                  :key="target"
+                  class="picker-option"
+                  @mousedown.prevent="addLighthouseTarget(target)"
+                >
+                  {{ target }}
                 </button>
                 <button
-                  class="secondary-button"
-                  @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
+                  v-if="canAddManualLighthouseUrl"
+                  class="picker-option"
+                  @mousedown.prevent="addLighthouseTarget(lighthouseSearch.trim())"
                 >
-                  Add to denylist
+                  Add manual URL: {{ lighthouseSearch.trim() }}
                 </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <aside class="stack">
-        <section class="panel stack">
-          <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
-            <div>
-              <h3>Run next audit</h3>
-              <p class="muted">
-                Review the latest runs first, then adjust discovery and rules before queueing another audit.
-              </p>
-            </div>
-            <div class="nav-links">
-              <button
-                class="button button-primary"
-                :disabled="runPending || !discovery?.included"
-                @click="runAudit"
-              >
-                {{ runPending ? 'Queueing…' : 'Run filtered audit' }}
-              </button>
-              <button
-                class="secondary-button"
-                :disabled="discoveryPending"
-                @click="refreshDiscovery()"
-              >
-                {{ discoveryPending ? 'Refreshing…' : 'Refresh discovery' }}
-              </button>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; gap: 16px; align-items: center;">
-            <div>
-              <h3>Crawl rules</h3>
-              <p class="muted">
-                Allowlist runs first, then denylist wins on conflict. Rules are matched against normalized full URLs.
-              </p>
-            </div>
-            <button
-              class="button button-primary"
-              :disabled="rulesPending"
-              @click="saveRules"
-            >
-              {{ rulesPending ? 'Saving…' : 'Save rules' }}
-            </button>
-          </div>
-
-          <div class="stack">
-            <div class="field">
-              <label for="typo-language">Typo audit language</label>
-              <select
-                id="typo-language"
-                v-model="typoLanguage"
-              >
-                <option
-                  v-for="option in typoLanguageOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p class="muted">
-                Choose which English dictionary the typo audit should use for this site.
-              </p>
-            </div>
-
-            <div class="field">
-              <label for="lighthouse-targets">Additional Lighthouse URLs</label>
-              <div class="picker stack">
-                <div class="picker-selected">
-                  <span
-                    v-for="target in lighthouseTargets"
-                    :key="target"
-                    class="picker-chip"
-                  >
-                    <span>{{ target }}</span>
-                    <button @click="removeLighthouseTarget(target)">
-                      Remove
-                    </button>
-                  </span>
-                  <span
-                    v-if="!lighthouseTargets.length"
-                    class="muted"
-                  >
-                    No additional Lighthouse URLs selected.
-                  </span>
-                </div>
-
-                <div class="picker-search">
-                  <input
-                    id="lighthouse-targets"
-                    v-model="lighthouseSearch"
-                    type="search"
-                    placeholder="Search discovered pages or paste a full URL"
-                    @focus="lighthouseSearchFocused = true"
-                    @blur="lighthouseSearchFocused = false"
-                  >
-                </div>
-
                 <div
-                  v-if="lighthouseSearchFocused || lighthouseSearch"
-                  class="picker-dropdown"
+                  v-if="!filteredLighthouseOptions.length && !canAddManualLighthouseUrl"
+                  class="empty"
                 >
-                  <button
-                    v-for="target in filteredLighthouseOptions"
-                    :key="target"
-                    class="picker-option"
-                    @mousedown.prevent="addLighthouseTarget(target)"
-                  >
-                    {{ target }}
-                  </button>
-                  <button
-                    v-if="canAddManualLighthouseUrl"
-                    class="picker-option"
-                    @mousedown.prevent="addLighthouseTarget(lighthouseSearch.trim())"
-                  >
-                    Add manual URL: {{ lighthouseSearch.trim() }}
-                  </button>
-                  <div
-                    v-if="!filteredLighthouseOptions.length && !canAddManualLighthouseUrl"
-                    class="empty"
-                  >
-                    No matching discovered pages.
-                  </div>
+                  No matching discovered pages.
                 </div>
               </div>
-              <p class="muted">
-                The homepage is always audited. Search discovered pages to add them here, or paste a full URL as a manual fallback.
-              </p>
             </div>
+            <p class="muted">
+              The homepage is always audited.
+            </p>
           </div>
 
           <div class="stack">
@@ -693,7 +532,7 @@ function removeLighthouseTarget(target: string) {
                 class="secondary-button"
                 @click="addRule('allow')"
               >
-                Add allow rule
+                Add rule
               </button>
             </div>
             <div
@@ -730,7 +569,7 @@ function removeLighthouseTarget(target: string) {
               v-else
               class="empty"
             >
-              No allow rules. All discovered internal URLs are eligible unless denied.
+              No allow rules — all discovered internal URLs are eligible unless denied.
             </div>
           </div>
 
@@ -741,7 +580,7 @@ function removeLighthouseTarget(target: string) {
                 class="secondary-button"
                 @click="addRule('deny')"
               >
-                Add deny rule
+                Add rule
               </button>
             </div>
             <div
@@ -781,33 +620,190 @@ function removeLighthouseTarget(target: string) {
               No deny rules.
             </div>
           </div>
-        </section>
+        </div>
 
-        <section class="panel stack">
-          <h3>Latest issue mix</h3>
-          <div
-            v-if="websiteData?.latestIssueSummary && Object.keys(websiteData.latestIssueSummary).length"
-            class="stack"
-          >
+        <!-- Right: discovery preview -->
+        <div class="stack">
+          <div style="display: flex; justify-content: space-between; gap: 12px; align-items: start; flex-wrap: wrap;">
+            <div>
+              <h4>Discovery preview</h4>
+              <p class="muted">
+                Sitemap candidates load first; homepage is used as fallback.
+              </p>
+            </div>
             <div
-              v-for="(count, category) in websiteData.latestIssueSummary"
-              :key="category"
-              class="issue"
+              v-if="discovery"
+              class="stack"
+              style="gap: 4px; text-align: right; flex-shrink: 0;"
+            >
+              <span class="muted">{{ discovery.source }}</span>
+              <span class="muted">{{ new Date(discovery.generatedAt).toLocaleString() }}</span>
+            </div>
+          </div>
+
+          <template v-if="discovery">
+            <section class="issue stack">
+              <header>
+                <strong>Included URLs</strong>
+                <span>{{ includedEntries.length }}</span>
+              </header>
+              <div
+                v-if="includedEntries.length"
+                class="preview-list"
+              >
+                <div
+                  v-for="entry in includedEntries"
+                  :key="entry.url"
+                  class="preview-item"
+                >
+                  <div>
+                    <strong>{{ entry.url }}</strong>
+                    <p class="muted">
+                      {{ entry.source }}
+                    </p>
+                  </div>
+                  <span
+                    v-if="entry.matchedRule"
+                    class="muted"
+                  >
+                    {{ entry.matchedRule.mode }} · {{ entry.matchedRule.matcher }}
+                  </span>
+                </div>
+              </div>
+              <div
+                v-else
+                class="empty"
+              >
+                No URLs are currently included.
+              </div>
+            </section>
+
+            <section
+              v-if="excludedEntries.length"
+              class="issue stack"
             >
               <header>
-                <strong>{{ category }}</strong>
-                <span>{{ count }}</span>
+                <strong>Excluded URLs</strong>
+                <span>{{ excludedEntries.length }}</span>
               </header>
-            </div>
+              <div class="preview-list">
+                <div
+                  v-for="entry in excludedEntries"
+                  :key="entry.url"
+                  class="preview-item"
+                >
+                  <div>
+                    <strong>{{ entry.url }}</strong>
+                    <p class="muted">
+                      {{ entry.source }}
+                    </p>
+                  </div>
+                  <span class="muted">
+                    {{ entry.matchedRule ? `${entry.matchedRule.mode} · ${entry.matchedRule.matcher}` : 'No allow rule matched' }}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section
+              v-if="allowSuggestions.length || denySuggestions.length"
+              class="issue stack"
+            >
+              <header>
+                <strong>Rule suggestions</strong>
+                <span>{{ allowSuggestions.length + denySuggestions.length }}</span>
+              </header>
+
+              <div
+                v-if="allowSuggestions.length"
+                class="stack"
+                style="gap: 12px;"
+              >
+                <span class="section-label">Allow presets</span>
+                <div
+                  v-for="suggestion in allowSuggestions"
+                  :key="`allow-${suggestion.matcher}:${suggestion.pattern}`"
+                  class="preview-item"
+                >
+                  <div>
+                    <strong>{{ suggestion.pattern }}</strong>
+                    <p class="muted">
+                      {{ suggestion.reason }} · matches {{ suggestion.matchedCount }} URL{{ suggestion.matchedCount === 1 ? '' : 's' }}
+                    </p>
+                    <p class="muted">
+                      {{ suggestion.exampleUrls.join(' · ') }}
+                    </p>
+                  </div>
+                  <div class="preset-actions">
+                    <button
+                      class="secondary-button"
+                      @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
+                    >
+                      Allow
+                    </button>
+                    <button
+                      class="secondary-button"
+                      @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
+                    >
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-if="denySuggestions.length"
+                class="stack"
+                style="gap: 12px;"
+              >
+                <span class="section-label">Deny presets</span>
+                <div
+                  v-for="suggestion in denySuggestions"
+                  :key="`deny-${suggestion.matcher}:${suggestion.pattern}`"
+                  class="preview-item"
+                >
+                  <div>
+                    <strong>{{ suggestion.pattern }}</strong>
+                    <p class="muted">
+                      {{ suggestion.reason }} · matches {{ suggestion.matchedCount }} URL{{ suggestion.matchedCount === 1 ? '' : 's' }}
+                    </p>
+                    <p class="muted">
+                      {{ suggestion.exampleUrls.join(' · ') }}
+                    </p>
+                  </div>
+                  <div class="preset-actions">
+                    <button
+                      class="secondary-button"
+                      @click="addSuggestedAllowRule(suggestion.pattern, suggestion.matcher)"
+                    >
+                      Allow
+                    </button>
+                    <button
+                      class="secondary-button"
+                      @click="addSuggestedDenyRule(suggestion.pattern, suggestion.matcher)"
+                    >
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </template>
+
+          <div
+            v-else-if="discoveryPending"
+            class="empty"
+          >
+            Loading discovery preview…
           </div>
           <div
             v-else
             class="empty"
           >
-            No issue summary yet.
+            Discovery preview has not loaded yet.
           </div>
-        </section>
-      </aside>
-    </div>
+        </div>
+      </div>
+    </section>
   </section>
 </template>

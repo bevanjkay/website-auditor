@@ -1,7 +1,7 @@
 {
   "name": "@website-auditor/audit-engine",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "exports": {
     ".": {
       "types": "./dist/packages/audit-engine/src/index.d.ts",

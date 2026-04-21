@@ -1,7 +1,7 @@
 {
   "name": "@website-auditor/worker",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
