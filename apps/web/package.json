@@ -1,7 +1,7 @@
 {
   "name": "@website-auditor/web",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "build": "nuxt build",
     "typecheck": "nuxi prepare && vue-tsc --project tsconfig.json --noEmit",

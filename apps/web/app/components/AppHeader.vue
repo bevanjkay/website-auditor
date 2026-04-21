@@ -11,29 +11,36 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <header class="app-header">
-    <div class="brand">
+  <aside class="app-sidebar">
+    <div class="sidebar-brand">
       <h1>Website Auditor</h1>
-      <p>Browser-rendered SEO, link, sitemap, and typo checks.</p>
+      <p>SEO, link &amp; typo audits.</p>
     </div>
 
-    <div class="nav-links">
-      <NuxtLink to="/">
+    <nav class="sidebar-nav">
+      <NuxtLink class="sidebar-link" to="/">
         Dashboard
       </NuxtLink>
-      <NuxtLink to="/websites/new">
+      <NuxtLink class="sidebar-link" to="/websites/new">
         Add Website
       </NuxtLink>
       <NuxtLink
         v-if="user.role === 'admin'"
+        class="sidebar-link"
         to="/admin/users"
       >
         Users
       </NuxtLink>
-      <span class="muted">{{ user.username }}</span>
-      <button @click="emit('logout')">
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="sidebar-user">{{ user.username }}</span>
+      <button
+        class="sidebar-link"
+        @click="emit('logout')"
+      >
         Logout
       </button>
     </div>
-  </header>
+  </aside>
 </template>
