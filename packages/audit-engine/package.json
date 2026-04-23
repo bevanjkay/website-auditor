@@ -20,7 +20,7 @@
     "dictionary-en": "^4.0.0",
     "dictionary-en-au": "^3.0.0",
     "dictionary-en-gb": "^3.0.0",
-    "fast-xml-parser": "^5.5.11",
+    "fast-xml-parser": "^5.7.0",
     "lighthouse": "^13.1.0",
     "nspell": "^2.1.5",
     "p-limit": "^7.3.0",
