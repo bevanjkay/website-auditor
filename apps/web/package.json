@@ -11,7 +11,7 @@
     "@website-auditor/audit-engine": "workspace:*",
     "@website-auditor/db": "workspace:*",
     "@website-auditor/shared": "workspace:*",
-    "bullmq": "^5.73.5",
+    "bullmq": "^5.74.1",
     "h3": "^1.15.4",
     "nuxt": "^4.4.2",
     "vue": "^3.5.13",
@@ -19,6 +19,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "vue-tsc": "^3.1.0"
+    "vue-tsc": "^3.2.7"
   }
 }
