@@ -11,12 +11,12 @@
     "@website-auditor/audit-engine": "workspace:*",
     "@website-auditor/db": "workspace:*",
     "@website-auditor/shared": "workspace:*",
-    "bullmq": "^5.76.2",
+    "bullmq": "^5.76.5",
     "h3": "^1.15.4",
-    "nuxt": "^4.4.2",
+    "nuxt": "^4.4.4",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6",
-    "zod": "^4.3.6"
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "vue-tsc": "^3.2.7"
