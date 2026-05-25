@@ -15,6 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@website-auditor/audit-engine": "link:",
     "@website-auditor/shared": "workspace:*",
     "chrome-launcher": "^1.2.1",
     "dictionary-en": "^4.0.0",
@@ -24,6 +25,6 @@
     "lighthouse": "^13.3.0",
     "nspell": "^2.1.5",
     "p-limit": "^7.3.0",
-    "playwright": "1.59.1"
+    "playwright": "1.60.0"
   }
 }
