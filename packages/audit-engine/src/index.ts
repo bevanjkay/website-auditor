@@ -1177,12 +1177,10 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
       const imageSourcesMissingDimensions = [...document.querySelectorAll("img[src]")]
         .filter(image => !(image.getAttribute("width") ?? "").trim() || !(image.getAttribute("height") ?? "").trim())
         .map(image => image.getAttribute("src") ?? "");
-      const metaContent = (selector: string): string | null =>
-        document.querySelector(selector)?.getAttribute("content")?.trim() || null;
-      const ogTitle = metaContent("meta[property=\"og:title\"]");
-      const ogImage = metaContent("meta[property=\"og:image\"]");
-      const ogDescription = metaContent("meta[property=\"og:description\"]");
-      const twitterCard = metaContent("meta[name=\"twitter:card\"]");
+      const ogTitle = document.querySelector("meta[property=\"og:title\"]")?.getAttribute("content")?.trim() || null;
+      const ogImage = document.querySelector("meta[property=\"og:image\"]")?.getAttribute("content")?.trim() || null;
+      const ogDescription = document.querySelector("meta[property=\"og:description\"]")?.getAttribute("content")?.trim() || null;
+      const twitterCard = document.querySelector("meta[name=\"twitter:card\"]")?.getAttribute("content")?.trim() || null;
       const hasViewport = Boolean(document.querySelector("meta[name=\"viewport\"]"));
       const headingLevels = Array.from(
         document.querySelectorAll("h1, h2, h3, h4, h5, h6"),
