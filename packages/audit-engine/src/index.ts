@@ -100,7 +100,7 @@ interface DiscoveredCandidate {
   source: DiscoverySource;
 }
 
-interface ExtractedPage {
+export interface ExtractedPage {
   finalUrl: string;
   httpStatus: number | null;
   title: string | null;
@@ -111,8 +111,16 @@ interface ExtractedPage {
   links: Array<{ href: string; text: string | null; nofollow: boolean }>;
   visibleText: string;
   imageSourcesMissingAlt: string[];
+  imageSourcesMissingDimensions: string[];
   robotsMeta: string | null;
   structuredDataCount: number;
+  ogTitle: string | null;
+  ogImage: string | null;
+  ogDescription: string | null;
+  twitterCard: string | null;
+  hasViewport: boolean;
+  headingLevels: number[];
+  insecureResources: string[];
 }
 
 interface SiteContext {
@@ -1166,6 +1174,25 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
       const imageSourcesMissingAlt = [...document.querySelectorAll("img[src]")]
         .filter(image => !(image.getAttribute("alt") ?? "").trim())
         .map(image => image.getAttribute("src") ?? "");
+      const imageSourcesMissingDimensions = [...document.querySelectorAll("img[src]")]
+        .filter(image => !(image.getAttribute("width") ?? "").trim() || !(image.getAttribute("height") ?? "").trim())
+        .map(image => image.getAttribute("src") ?? "");
+      const metaContent = (selector: string): string | null =>
+        document.querySelector(selector)?.getAttribute("content")?.trim() || null;
+      const ogTitle = metaContent("meta[property=\"og:title\"]");
+      const ogImage = metaContent("meta[property=\"og:image\"]");
+      const ogDescription = metaContent("meta[property=\"og:description\"]");
+      const twitterCard = metaContent("meta[name=\"twitter:card\"]");
+      const hasViewport = Boolean(document.querySelector("meta[name=\"viewport\"]"));
+      const headingLevels = Array.from(
+        document.querySelectorAll("h1, h2, h3, h4, h5, h6"),
+        heading => Number(heading.tagName.slice(1)),
+      );
+      const insecureResources = [...document.querySelectorAll(
+        "img[src], script[src], iframe[src], source[src], video[src], audio[src], link[href]",
+      )]
+        .map(element => element.getAttribute("src") ?? element.getAttribute("href") ?? "")
+        .filter(resourceUrl => /^http:\/\//i.test(resourceUrl));
       const measurementRoot = document.createElement("div");
       measurementRoot.style.position = "fixed";
       measurementRoot.style.left = "-99999px";
@@ -1193,6 +1220,14 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
         structuredDataCount,
         links,
         imageSourcesMissingAlt,
+        imageSourcesMissingDimensions,
+        ogTitle,
+        ogImage,
+        ogDescription,
+        twitterCard,
+        hasViewport,
+        headingLevels,
+        insecureResources,
         visibleText,
       };
     });
@@ -1244,7 +1279,27 @@ async function checkUrl(targetUrl: string, fetchImpl: FetchLike): Promise<number
   }
 }
 
-function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoMatches: TypoMatch[]): AuditIssueRecord[] {
+function hostOf(candidate: string, base: string): string | null {
+  try {
+    return new URL(candidate, base).host.toLowerCase();
+  }
+  catch {
+    return null;
+  }
+}
+
+function findSkippedHeadingLevel(levels: number[]): { from: number; to: number } | null {
+  let previous: number | null = null;
+  for (const level of levels) {
+    if (previous !== null && level > previous + 1) {
+      return { from: previous, to: level };
+    }
+    previous = level;
+  }
+  return null;
+}
+
+export function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoMatches: TypoMatch[]): AuditIssueRecord[] {
   const issues: AuditIssueRecord[] = [];
 
   if (!extracted.title) {
@@ -1255,6 +1310,32 @@ function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoMatches:
       severity: "error",
       title: "Missing page title",
       message: "The page does not define a <title> element.",
+    });
+  }
+  else if (extracted.title.length > 60) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "long_title",
+      severity: "info",
+      title: "Long page title",
+      message: "The page title is longer than 60 characters and may be truncated in search results.",
+      evidence: {
+        length: extracted.title.length,
+      },
+    });
+  }
+  else if (extracted.title.length < 10) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "short_title",
+      severity: "info",
+      title: "Short page title",
+      message: "The page title is shorter than 10 characters and may not be descriptive enough.",
+      evidence: {
+        length: extracted.title.length,
+      },
     });
   }
 
@@ -1276,6 +1357,19 @@ function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoMatches:
       severity: "info",
       title: "Long meta description",
       message: "The meta description is longer than 160 characters.",
+      evidence: {
+        length: extracted.metaDescription.length,
+      },
+    });
+  }
+  else if (extracted.metaDescription.length < 50) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "short_meta_description",
+      severity: "info",
+      title: "Short meta description",
+      message: "The meta description is shorter than 50 characters and may be too brief to be useful.",
       evidence: {
         length: extracted.metaDescription.length,
       },
@@ -1363,6 +1457,126 @@ function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoMatches:
       message: `${extracted.imageSourcesMissingAlt.length} image(s) are missing alt text.`,
       evidence: {
         images: extracted.imageSourcesMissingAlt,
+      },
+    });
+  }
+
+  const primaryH1 = extracted.h1s[0];
+  if (primaryH1 && extracted.title && primaryH1.trim().toLowerCase() === extracted.title.trim().toLowerCase()) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "h1_matches_title",
+      severity: "info",
+      title: "H1 duplicates the page title",
+      message: "The H1 heading is identical to the page title; consider complementary wording to broaden keyword coverage.",
+    });
+  }
+
+  const skippedHeading = findSkippedHeadingLevel(extracted.headingLevels);
+  if (skippedHeading) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "heading_hierarchy_skip",
+      severity: "info",
+      title: "Skipped heading level",
+      message: `The heading structure jumps from H${skippedHeading.from} to H${skippedHeading.to}, skipping a level.`,
+      evidence: {
+        from: skippedHeading.from,
+        to: skippedHeading.to,
+      },
+    });
+  }
+
+  const wordCount = tokenize(extracted.visibleText).length;
+  if (wordCount < 100) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "thin_content",
+      severity: "info",
+      title: "Thin content",
+      message: `The page has only ${wordCount} words of body content, which may be considered thin by search engines.`,
+      evidence: {
+        wordCount,
+      },
+    });
+  }
+
+  if (extracted.canonicalUrl) {
+    const canonicalHost = hostOf(extracted.canonicalUrl, pageUrl);
+    const pageHost = hostOf(pageUrl, pageUrl);
+    if (canonicalHost && pageHost && canonicalHost !== pageHost) {
+      issues.push({
+        pageUrl,
+        category: "seo",
+        code: "canonical_offsite",
+        severity: "warning",
+        title: "Canonical points to another host",
+        message: `The canonical URL references ${canonicalHost}, which differs from the page host ${pageHost}.`,
+        evidence: {
+          canonicalUrl: extracted.canonicalUrl,
+        },
+      });
+    }
+  }
+
+  if (!extracted.hasViewport) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "missing_viewport",
+      severity: "warning",
+      title: "Missing viewport meta tag",
+      message: "The page does not define a viewport meta tag and may not render well on mobile devices.",
+    });
+  }
+
+  const missingSocialTags = [
+    ["og:title", extracted.ogTitle],
+    ["og:description", extracted.ogDescription],
+    ["og:image", extracted.ogImage],
+  ].filter(([, value]) => !value).map(([tag]) => tag);
+  if (missingSocialTags.length > 0) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "incomplete_social_meta",
+      severity: "info",
+      title: "Incomplete social sharing metadata",
+      message: `The page is missing Open Graph tags: ${missingSocialTags.join(", ")}. Links may render poorly when shared.`,
+      evidence: {
+        missing: missingSocialTags,
+        twitterCard: extracted.twitterCard,
+      },
+    });
+  }
+
+  if (extracted.imageSourcesMissingDimensions.length > 0) {
+    issues.push({
+      pageUrl,
+      category: "seo",
+      code: "images_missing_dimensions",
+      severity: "info",
+      title: "Images missing dimensions",
+      message: `${extracted.imageSourcesMissingDimensions.length} image(s) are missing width or height attributes, which can cause layout shift.`,
+      evidence: {
+        images: extracted.imageSourcesMissingDimensions.slice(0, 50),
+      },
+    });
+  }
+
+  if (hostOf(pageUrl, pageUrl) && pageUrl.toLowerCase().startsWith("https://") && extracted.insecureResources.length > 0) {
+    issues.push({
+      pageUrl,
+      category: "security",
+      code: "mixed_content",
+      severity: "warning",
+      title: "Mixed content",
+      message: `The HTTPS page references ${extracted.insecureResources.length} resource(s) over insecure HTTP.`,
+      evidence: {
+        resources: extracted.insecureResources.slice(0, 50),
       },
     });
   }

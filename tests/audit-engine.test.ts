@@ -1,8 +1,11 @@
+import type { ExtractedPage } from "@website-auditor/audit-engine";
+
 import {
   buildAllowSuggestions,
   buildDenySuggestions,
   buildDiscoveryPreview,
   buildDuplicateContentIssues,
+  buildPageIssues,
   detectTypos,
   extractLighthouseFindings,
   isCheckableLinkTarget,
@@ -13,6 +16,32 @@ import {
 } from "@website-auditor/audit-engine";
 
 import { describe, expect, it } from "vitest";
+
+function makeExtractedPage(overrides: Partial<ExtractedPage> = {}): ExtractedPage {
+  return {
+    finalUrl: "https://example.com/page",
+    httpStatus: 200,
+    title: "A perfectly reasonable page title",
+    metaDescription: "A meta description that comfortably sits within the recommended length window for search.",
+    h1s: ["A distinct primary heading"],
+    lang: "en",
+    canonicalUrl: "https://example.com/page",
+    links: [],
+    visibleText: Array.from({ length: 200 }, (_, index) => `word${index}`).join(" "),
+    imageSourcesMissingAlt: [],
+    imageSourcesMissingDimensions: [],
+    robotsMeta: null,
+    structuredDataCount: 1,
+    ogTitle: "Title",
+    ogImage: "https://example.com/image.png",
+    ogDescription: "Description",
+    twitterCard: "summary",
+    hasViewport: true,
+    headingLevels: [1, 2, 2, 3],
+    insecureResources: [],
+    ...overrides,
+  };
+}
 
 describe("audit-engine helpers", () => {
   it("parses robots sitemap directives", () => {
@@ -333,5 +362,57 @@ describe("audit-engine helpers", () => {
     expect(result.pages).toHaveLength(0);
     expect(result.links).toHaveLength(0);
     expect(result.events.some(event => event.message === "Audit cancelled")).toBe(true);
+  });
+});
+
+describe("buildPageIssues content checks", () => {
+  const pageUrl = "https://example.com/page";
+  const codesFor = (page: ExtractedPage): string[] =>
+    buildPageIssues(pageUrl, page, []).map(issue => issue.code);
+
+  it("produces no extra issues for a healthy page", () => {
+    expect(codesFor(makeExtractedPage())).toEqual([]);
+  });
+
+  it("flags overly long and overly short titles", () => {
+    expect(codesFor(makeExtractedPage({ title: "x".repeat(61) }))).toContain("long_title");
+    expect(codesFor(makeExtractedPage({ title: "Hi" }))).toContain("short_title");
+  });
+
+  it("flags short meta descriptions", () => {
+    expect(codesFor(makeExtractedPage({ metaDescription: "Too short." }))).toContain("short_meta_description");
+  });
+
+  it("flags thin content below the word threshold", () => {
+    expect(codesFor(makeExtractedPage({ visibleText: "only a handful of words here" }))).toContain("thin_content");
+  });
+
+  it("flags a canonical pointing at another host", () => {
+    expect(codesFor(makeExtractedPage({ canonicalUrl: "https://other.com/page" }))).toContain("canonical_offsite");
+    expect(codesFor(makeExtractedPage({ canonicalUrl: "/page" }))).not.toContain("canonical_offsite");
+  });
+
+  it("flags an H1 that duplicates the title", () => {
+    expect(codesFor(makeExtractedPage({ title: "Same Heading", h1s: ["same heading"] }))).toContain("h1_matches_title");
+  });
+
+  it("flags missing viewport and incomplete social meta", () => {
+    expect(codesFor(makeExtractedPage({ hasViewport: false }))).toContain("missing_viewport");
+    expect(codesFor(makeExtractedPage({ ogImage: null }))).toContain("incomplete_social_meta");
+  });
+
+  it("flags skipped heading levels", () => {
+    expect(codesFor(makeExtractedPage({ headingLevels: [1, 3] }))).toContain("heading_hierarchy_skip");
+    expect(codesFor(makeExtractedPage({ headingLevels: [1, 2, 3] }))).not.toContain("heading_hierarchy_skip");
+  });
+
+  it("flags images missing dimensions", () => {
+    expect(codesFor(makeExtractedPage({ imageSourcesMissingDimensions: ["/a.png"] }))).toContain("images_missing_dimensions");
+  });
+
+  it("flags mixed content only on https pages", () => {
+    expect(codesFor(makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }))).toContain("mixed_content");
+    expect(buildPageIssues("http://example.com/page", makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }), [])
+      .map(issue => issue.code)).not.toContain("mixed_content");
   });
 });
