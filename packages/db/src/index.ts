@@ -483,32 +483,59 @@ export async function updateAuditRunProgress(input: {
   }).where(eq(auditRuns.id, input.runId));
 }
 
+// PostgreSQL caps a single statement at 65535 bind parameters. Split bulk
+// inserts so `rows * columnsPerRow` stays comfortably below that limit.
+const MAX_BIND_PARAMS = 60000;
+
+export function chunkRowsForInsert<T>(rows: T[], columnsPerRow: number): T[][] {
+  const chunkSize = Math.max(1, Math.floor(MAX_BIND_PARAMS / Math.max(1, columnsPerRow)));
+  const chunks: T[][] = [];
+  for (let index = 0; index < rows.length; index += chunkSize) {
+    chunks.push(rows.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+
+async function insertInChunks<TRow, TResult>(
+  rows: TRow[],
+  columnsPerRow: number,
+  run: (chunk: TRow[]) => PromiseLike<TResult[]>,
+): Promise<TResult[]> {
+  const results: TResult[] = [];
+  for (const chunk of chunkRowsForInsert(rows, columnsPerRow)) {
+    results.push(...await run(chunk));
+  }
+  return results;
+}
+
 export async function completeAuditRun(runId: string, result: AuditEngineResult) {
-  const insertedPages = result.pages.length > 0
-    ? await getDb().insert(auditPages).values(result.pages.map(page => ({
-        id: createId(),
-        auditRunId: runId,
-        url: page.url,
-        canonicalUrl: page.canonicalUrl,
-        httpStatus: page.httpStatus,
-        depth: page.depth,
-        fromSitemap: page.fromSitemap,
-        title: page.title,
-        metaDescription: page.metaDescription,
-        h1: page.h1,
-        wordCount: page.wordCount,
-        renderedAt: new Date(page.renderedAt),
-        pageDigest: page.pageDigest,
-      }))).returning({
-        id: auditPages.id,
-        url: auditPages.url,
-      })
-    : [];
+  const insertedPages = await insertInChunks(
+    result.pages.map(page => ({
+      id: createId(),
+      auditRunId: runId,
+      url: page.url,
+      canonicalUrl: page.canonicalUrl,
+      httpStatus: page.httpStatus,
+      depth: page.depth,
+      fromSitemap: page.fromSitemap,
+      title: page.title,
+      metaDescription: page.metaDescription,
+      h1: page.h1,
+      wordCount: page.wordCount,
+      renderedAt: new Date(page.renderedAt),
+      pageDigest: page.pageDigest,
+    })),
+    13,
+    chunk => getDb().insert(auditPages).values(chunk).returning({
+      id: auditPages.id,
+      url: auditPages.url,
+    }),
+  );
 
   const pageIdByUrl = new Map(insertedPages.map(page => [page.url, page.id]));
 
-  if (result.links.length > 0) {
-    await getDb().insert(auditLinks).values(result.links.map(link => ({
+  await insertInChunks(
+    result.links.map(link => ({
       id: createId(),
       auditRunId: runId,
       sourcePageId: pageIdByUrl.get(link.sourceUrl) ?? null,
@@ -518,11 +545,16 @@ export async function completeAuditRun(runId: string, result: AuditEngineResult)
       isBroken: link.isBroken,
       anchorText: link.anchorText,
       nofollow: link.nofollow,
-    })));
-  }
+    })),
+    9,
+    async (chunk) => {
+      await getDb().insert(auditLinks).values(chunk);
+      return [];
+    },
+  );
 
-  if (result.issues.length > 0) {
-    await getDb().insert(auditIssues).values(result.issues.map(issue => ({
+  await insertInChunks(
+    result.issues.map(issue => ({
       id: createId(),
       auditRunId: runId,
       pageId: issue.pageUrl ? pageIdByUrl.get(issue.pageUrl) ?? null : null,
@@ -532,19 +564,29 @@ export async function completeAuditRun(runId: string, result: AuditEngineResult)
       title: issue.title,
       message: issue.message,
       evidenceJson: issue.evidence ?? {},
-    })));
-  }
+    })),
+    9,
+    async (chunk) => {
+      await getDb().insert(auditIssues).values(chunk);
+      return [];
+    },
+  );
 
-  if (result.events.length > 0) {
-    await getDb().insert(auditEvents).values(result.events.map(event => ({
+  await insertInChunks(
+    result.events.map(event => ({
       id: createId(),
       auditRunId: runId,
       level: event.level,
       message: event.message,
       contextJson: event.context ?? {},
       createdAt: now(),
-    })));
-  }
+    })),
+    6,
+    async (chunk) => {
+      await getDb().insert(auditEvents).values(chunk);
+      return [];
+    },
+  );
 
   const typoCount = result.issues.filter(issue => issue.category === "typo").length;
   const seoIssueCount = result.issues.filter(issue => issue.category === "seo").length;
