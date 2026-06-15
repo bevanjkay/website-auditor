@@ -10,7 +10,7 @@ export const auditQueueName = "audit-site";
 export const issueSeverities = ["info", "warning", "error"] as const;
 export type IssueSeverity = (typeof issueSeverities)[number];
 
-export const issueCategories = ["crawl", "broken_link", "typo", "seo"] as const;
+export const issueCategories = ["crawl", "broken_link", "typo", "seo", "security"] as const;
 export type IssueCategory = (typeof issueCategories)[number];
 
 export const crawlRuleMatchers = ["glob", "exact", "prefix"] as const;
