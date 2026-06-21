@@ -22,7 +22,7 @@
     "dictionary-en-au": "^3.0.0",
     "dictionary-en-gb": "^3.0.0",
     "fast-xml-parser": "^5.8.0",
-    "lighthouse": "^13.3.0",
+    "lighthouse": "^13.4.0",
     "nspell": "^2.1.5",
     "p-limit": "^7.3.0",
     "playwright": "1.60.0"
