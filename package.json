@@ -14,11 +14,11 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^9.1.0",
+    "@antfu/eslint-config": "^9.2.0",
     "@types/node": "^26.1.1",
     "@types/nspell": "^2.1.6",
-    "eslint": "^10.7.0",
-    "typescript": "^6.0.3",
+    "eslint": "^10.8.0",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
 }
