@@ -15,10 +15,10 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^9.2.0",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/nspell": "^2.1.6",
     "eslint": "^10.8.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }
 }
