@@ -18,7 +18,7 @@
     "@types/node": "^26.1.2",
     "@types/nspell": "^2.1.6",
     "eslint": "^10.8.0",
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   }
 }
