@@ -19,6 +19,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "vue-tsc": "^3.3.10"
+    "vue-tsc": "^3.3.11"
   }
 }
