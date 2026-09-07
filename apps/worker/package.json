@@ -11,7 +11,7 @@
     "@website-auditor/audit-engine": "workspace:*",
     "@website-auditor/db": "workspace:*",
     "@website-auditor/shared": "workspace:*",
-    "bullmq": "^6.1.2",
-    "tsx": "^4.23.12"
+    "bullmq": "^6.3.2",
+    "tsx": "^4.23.13"
   }
 }
