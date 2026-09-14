@@ -5,4 +5,4 @@
 
 ## Datastore images
 - `postgres` and `redis` majors are pinned out of Dependabot in the synced `.github/dependabot.yml` (source of truth: `bevanjkay/.github`), so they never arrive as a PR. Bumping one is a migration, not a tag change: Postgres 18+ puts `PGDATA` at `/var/lib/postgresql/<major>/docker`, so the compose mount has to move to `/var/lib/postgresql` and the existing cluster needs `pg_upgrade` or a dump/restore.
-- `pnpm test:compose` is the only check that starts `docker-compose.yml`; lint, typecheck, test and build all pass on a stack that cannot boot.
+- `scripts/compose-smoke.sh` is the only check that starts `docker-compose.yml`; lint, typecheck, test and build all pass on a stack that cannot boot. CI runs it directly, so it needs no Node setup; `pnpm test:compose` is a local alias for the same script.

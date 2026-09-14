@@ -15,18 +15,36 @@
 # docker CLI calls with no parsing logic, which Node would only wrap in
 # execSync.
 #
-# Runs under its own compose project name, so the `down -v` in the cleanup trap
-# can never remove the volumes of a real local stack.
+# Runs under a project name unique to the invocation, so the `down -v` in the
+# cleanup trap can only ever reach this run's own volumes -- never those of a
+# real local stack, and never those of a concurrent run of this script.
 
 set -euo pipefail
 
-readonly PROJECT="website-auditor-smoke"
+readonly PROJECT="website-auditor-smoke-$$"
 readonly TOKEN="smoke-${RANDOM}${RANDOM}"
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# Everything here talks to the containers through `compose exec`, so the test
+# needs no published ports -- and publishing them would make it collide with a
+# real local stack already holding 5432 and 6379. Note that `ports: []` does not
+# clear them: compose concatenates sequence fields across files, so the mapping
+# survives. `!reset` is the tag that actually drops it, confirmed against
+# `docker compose config`.
+TMPDIR_SMOKE="$(mktemp -d)"
+readonly TMPDIR_SMOKE
+readonly OVERRIDE="${TMPDIR_SMOKE}/compose-smoke-override.yml"
+cat > "${OVERRIDE}" <<'YAML'
+services:
+  postgres:
+    ports: !reset []
+  redis:
+    ports: !reset []
+YAML
+
 compose() {
-  docker compose -p "${PROJECT}" "$@"
+  docker compose -p "${PROJECT}" -f docker-compose.yml -f "${OVERRIDE}" "$@"
 }
 
 # psql, resolving the credentials from the container's own environment so the
@@ -55,6 +73,7 @@ fi
 # shellcheck disable=SC2329 # Invoked indirectly, by the EXIT trap below.
 cleanup() {
   compose down -v --remove-orphans >/dev/null 2>&1 || true
+  rm -rf "${TMPDIR_SMOKE}"
   if [[ "${created_env}" == true ]]; then
     rm -f .env
   fi
@@ -87,7 +106,10 @@ start
 echo "==> Verifying"
 failures=0
 
-postgres_token="$(psql_c "SELECT token FROM compose_smoke" || true)"
+# Filtered to this run's token rather than selecting the table: a row left by
+# an interrupted earlier run would otherwise concatenate into the comparison and
+# report a token that did persist as lost.
+postgres_token="$(psql_c "SELECT token FROM compose_smoke WHERE token = '${TOKEN}'" || true)"
 if [[ "${postgres_token}" == "${TOKEN}" ]]; then
   echo "PASS: postgres data survived in the named volume"
 else
