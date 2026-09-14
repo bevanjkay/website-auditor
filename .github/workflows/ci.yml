@@ -54,3 +54,19 @@ jobs:
       - name: Build project
         if: github.event_name != 'push' && inputs.run_build
         run: pnpm build
+
+  compose-smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run compose smoke test
+        # Called directly rather than through pnpm: the script only drives the
+        # docker CLI, so this job needs no Node or pnpm setup.
+        run: bash scripts/compose-smoke.sh
