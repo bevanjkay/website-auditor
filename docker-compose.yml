@@ -28,7 +28,7 @@ services:
       pnpm --filter @website-auditor/worker start"
 
   postgres:
-    image: postgres:16
+    image: postgres:18
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-website_auditor}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -45,7 +45,7 @@ services:
       start_period: 10s
 
   redis:
-    image: redis:7
+    image: redis:8
     ports:
       - "6379:6379"
     volumes:
