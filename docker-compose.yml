@@ -6,8 +6,10 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: >
       sh -c "pnpm --filter @website-auditor/db db:push &&
       pnpm --filter @website-auditor/web start"
@@ -17,8 +19,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: >
       sh -c "pnpm --filter @website-auditor/db db:push &&
       pnpm --filter @website-auditor/worker start"
@@ -33,6 +37,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   redis:
     image: redis:7
@@ -40,6 +50,12 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
 volumes:
   postgres-data:
