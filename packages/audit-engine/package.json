@@ -22,9 +22,9 @@
     "dictionary-en-au": "^3.0.0",
     "dictionary-en-gb": "^3.0.0",
     "fast-xml-parser": "^5.11.1",
-    "lighthouse": "^13.4.1",
+    "lighthouse": "^13.5.0",
     "nspell": "^2.1.5",
-    "p-limit": "^7.3.2",
+    "p-limit": "^7.3.3",
     "playwright": "1.63.0"
   }
 }
