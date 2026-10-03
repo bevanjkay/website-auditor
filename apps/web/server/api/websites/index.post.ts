@@ -15,7 +15,9 @@ export default defineEventHandler(async (event) => {
   if (existing) {
     throw createError({
       statusCode: 409,
-      statusMessage: "A website with this host already exists.",
+      statusMessage: existing.isActive
+        ? "A website with this host already exists."
+        : "A website with this host is archived. Restore it from the archived list on the dashboard.",
     });
   }
 

@@ -226,8 +226,38 @@ export async function deleteSession(sessionId: string) {
   await getDb().delete(sessions).where(eq(sessions.id, sessionId));
 }
 
+const completedRunStatuses = ["completed", "completed_with_limits"];
+
+export interface SeverityCounts {
+  error: number;
+  warning: number;
+  info: number;
+}
+
+export async function countIssuesBySeverity(runIds: string[]): Promise<Map<string, SeverityCounts>> {
+  const counts = new Map<string, SeverityCounts>(runIds.map(id => [id, { error: 0, warning: 0, info: 0 }]));
+  if (runIds.length === 0) {
+    return counts;
+  }
+
+  const rows = await getDb().select({
+    auditRunId: auditIssues.auditRunId,
+    severity: auditIssues.severity,
+    count: sql<number>`count(*)::int`,
+  }).from(auditIssues).where(inArray(auditIssues.auditRunId, runIds)).groupBy(auditIssues.auditRunId, auditIssues.severity);
+
+  for (const row of rows) {
+    const entry = counts.get(row.auditRunId);
+    if (entry && (row.severity === "error" || row.severity === "warning" || row.severity === "info")) {
+      entry[row.severity] = row.count;
+    }
+  }
+
+  return counts;
+}
+
 export async function listWebsites() {
-  return getDb().select({
+  const rows = await getDb().select({
     id: websites.id,
     name: websites.name,
     baseUrl: websites.baseUrl,
@@ -248,6 +278,36 @@ export async function listWebsites() {
     typoCount: auditRuns.typoCount,
     seoIssueCount: auditRuns.seoIssueCount,
   }).from(websites).leftJoin(auditRuns, eq(websites.lastAuditRunId, auditRuns.id)).orderBy(websites.name);
+
+  const completedRuns = await getDb().select({
+    id: auditRuns.id,
+    websiteId: auditRuns.websiteId,
+    finishedAt: auditRuns.finishedAt,
+  }).from(auditRuns).where(inArray(auditRuns.status, completedRunStatuses)).orderBy(desc(auditRuns.finishedAt));
+
+  const recentCompletedByWebsite = new Map<string, typeof completedRuns>();
+  for (const run of completedRuns) {
+    const recent = recentCompletedByWebsite.get(run.websiteId) ?? [];
+    if (recent.length < 2) {
+      recent.push(run);
+      recentCompletedByWebsite.set(run.websiteId, recent);
+    }
+  }
+
+  const severityCounts = await countIssuesBySeverity([...recentCompletedByWebsite.values()].flat().map(run => run.id));
+
+  return rows.map((row) => {
+    const [latest, previous] = recentCompletedByWebsite.get(row.id) ?? [];
+    return {
+      ...row,
+      lastCompletedRun: latest
+        ? { id: latest.id, finishedAt: latest.finishedAt, severityCounts: severityCounts.get(latest.id)! }
+        : null,
+      previousCompletedRun: previous
+        ? { id: previous.id, finishedAt: previous.finishedAt, severityCounts: severityCounts.get(previous.id)! }
+        : null,
+    };
+  });
 }
 
 export async function getWebsiteById(id: string) {
@@ -352,7 +412,36 @@ export async function createAuditRun(input: {
 }
 
 export async function listAuditRunsForWebsite(websiteId: string) {
-  return getDb().select().from(auditRuns).where(eq(auditRuns.websiteId, websiteId)).orderBy(desc(auditRuns.startedAt), desc(auditRuns.finishedAt));
+  const runs = await getDb().select({
+    id: auditRuns.id,
+    status: auditRuns.status,
+    startedAt: auditRuns.startedAt,
+    finishedAt: auditRuns.finishedAt,
+    pageCount: auditRuns.pageCount,
+    issueCount: auditRuns.issueCount,
+    brokenLinkCount: auditRuns.brokenLinkCount,
+  }).from(auditRuns).where(eq(auditRuns.websiteId, websiteId)).orderBy(sql`${auditRuns.startedAt} desc nulls first`, desc(auditRuns.finishedAt));
+  const severityCounts = await countIssuesBySeverity(runs.map(run => run.id));
+
+  return runs.map(run => ({
+    ...run,
+    severityCounts: severityCounts.get(run.id)!,
+  }));
+}
+
+export async function getPreviousCompletedAuditRun(run: { id: string; websiteId: string; startedAt: Date | null; finishedAt: Date | null }) {
+  const cutoff = run.finishedAt ?? run.startedAt ?? now();
+  const candidates = await getDb().select({
+    id: auditRuns.id,
+    status: auditRuns.status,
+    startedAt: auditRuns.startedAt,
+    finishedAt: auditRuns.finishedAt,
+  }).from(auditRuns).where(and(
+    eq(auditRuns.websiteId, run.websiteId),
+    inArray(auditRuns.status, completedRunStatuses),
+  )).orderBy(desc(auditRuns.finishedAt));
+
+  return candidates.find(candidate => candidate.id !== run.id && candidate.finishedAt !== null && candidate.finishedAt < cutoff) ?? null;
 }
 
 export async function getAuditRun(id: string) {

@@ -7,12 +7,16 @@ import { requireAdmin } from "../../../utils/auth.js";
 import { readValidatedBody } from "../../../utils/validation.js";
 
 export default defineEventHandler(async (event) => {
-  await requireAdmin(event);
+  const admin = await requireAdmin(event);
   const id = getRouterParam(event, "id");
   const body = await readValidatedBody(event, updateUserSchema);
 
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: "User id is required." });
+  }
+
+  if (id === admin.id && (body.isActive === false || body.role === "user")) {
+    throw createError({ statusCode: 409, statusMessage: "You can't disable or demote your own account." });
   }
 
   const user = await updateUser(id, body);

@@ -279,3 +279,37 @@ export function normalizeWebsiteUrl(input: string): { baseUrl: string; normalize
     normalizedHost: url.host.toLowerCase(),
   };
 }
+
+export interface ComparableIssue {
+  code: string;
+  pageUrl?: string | null;
+  message: string;
+  evidenceJson?: unknown;
+}
+
+const issueCodesKeyedByMessage = new Set(["broken_link", "invalid_link", "broken_canonical"]);
+
+// Issues are matched across runs by what they describe, not by row id: page-level checks by code and page,
+// link checks by their target (carried in the message), and duplicate titles by the shared title text.
+export function issueComparisonKey(issue: ComparableIssue): string {
+  const evidence = issue.evidenceJson && typeof issue.evidenceJson === "object"
+    ? issue.evidenceJson as Record<string, unknown>
+    : {};
+  const detail = issueCodesKeyedByMessage.has(issue.code)
+    ? issue.message
+    : issue.code === "duplicate_title" && typeof evidence.title === "string"
+      ? evidence.title
+      : "";
+
+  return [issue.code, issue.pageUrl ?? "", detail].join("|");
+}
+
+export function compareIssueSets<T extends ComparableIssue>(current: T[], previous: T[]): { newKeys: Set<string>; fixed: T[] } {
+  const currentKeys = new Set(current.map(issueComparisonKey));
+  const previousKeys = new Set(previous.map(issueComparisonKey));
+
+  return {
+    newKeys: new Set([...currentKeys].filter(key => !previousKeys.has(key))),
+    fixed: previous.filter(issue => !currentKeys.has(issueComparisonKey(issue))),
+  };
+}
