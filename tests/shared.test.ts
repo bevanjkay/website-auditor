@@ -1,6 +1,6 @@
 import type { ComparableIssue } from "@website-auditor/shared";
 
-import { compareIssueSets, issueComparisonKey, normalizeWebsiteUrl } from "@website-auditor/shared";
+import { compareIssueSets, isLinkIgnored, issueComparisonKey, normalizeWebsiteUrl, parseLinkIgnore } from "@website-auditor/shared";
 
 import { describe, expect, it } from "vitest";
 
@@ -50,5 +50,33 @@ describe("compareIssueSets", () => {
 
     expect([...result.newKeys]).toEqual([issueComparisonKey(added)]);
     expect(result.fixed).toEqual([fixed]);
+  });
+});
+
+describe("link ignores", () => {
+  it("reads a bare host as a domain rule and a URL with a path as a URL rule", () => {
+    expect(parseLinkIgnore(" LinkedIn.com ")).toEqual({ kind: "domain", value: "linkedin.com" });
+    expect(parseLinkIgnore("*.instagram.com")).toEqual({ kind: "domain", value: "instagram.com" });
+    expect(parseLinkIgnore("https://example.com/old-page/")).toEqual({ kind: "url", value: "https://example.com/old-page/" });
+    expect(parseLinkIgnore("example.com/old-page")).toEqual({ kind: "url", value: "https://example.com/old-page" });
+  });
+
+  it("rejects input that is neither a URL nor a domain", () => {
+    expect(parseLinkIgnore("not a domain")).toBeNull();
+    expect(parseLinkIgnore("mailto:someone@example.com")).toBeNull();
+  });
+
+  it("matches a domain rule against the domain and its subdomains only", () => {
+    const rules = [{ kind: "domain" as const, value: "linkedin.com" }];
+    expect(isLinkIgnored("https://www.linkedin.com/company/acme", rules)).toBe(true);
+    expect(isLinkIgnored("https://linkedin.com/", rules)).toBe(true);
+    expect(isLinkIgnored("https://notlinkedin.com/", rules)).toBe(false);
+  });
+
+  it("matches a URL rule regardless of a trailing slash or fragment", () => {
+    const rules = [{ kind: "url" as const, value: "https://example.com/old-page/" }];
+    expect(isLinkIgnored("https://example.com/old-page", rules)).toBe(true);
+    expect(isLinkIgnored("https://example.com/old-page/#top", rules)).toBe(true);
+    expect(isLinkIgnored("https://example.com/old-page/2", rules)).toBe(false);
   });
 });
