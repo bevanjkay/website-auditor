@@ -14,11 +14,13 @@ import type {
   DiscoverySource,
   DiscoverySourceMode,
   LighthouseTargets,
+  LinkIgnore,
   TypoLanguage,
 } from "@website-auditor/shared";
 
 import { createHash } from "node:crypto";
-import { createEmptyCrawlRules } from "@website-auditor/shared";
+import { connect as connectTls } from "node:tls";
+import { createEmptyCrawlRules, isLinkIgnored } from "@website-auditor/shared";
 import { launch } from "chrome-launcher";
 import dictionary from "dictionary-en";
 import dictionaryAu from "dictionary-en-au";
@@ -91,6 +93,8 @@ type LighthouseFindingTarget = NonNullable<NonNullable<LighthouseFinding["target
 
 interface QueueItem {
   url: string;
+  // The link as written, which strict servers need; `url` is the normalised key used to avoid crawling a page twice.
+  fetchUrl?: string;
   depth: number;
   fromSitemap: boolean;
 }
@@ -121,6 +125,8 @@ export interface ExtractedPage {
   hasViewport: boolean;
   headingLevels: number[];
   insecureResources: string[];
+  failedResources: Array<{ url: string; status: number | null; type: string }>;
+  scriptErrors: string[];
 }
 
 interface SiteContext {
@@ -181,6 +187,26 @@ export function isCheckableLinkTarget(candidate: string): boolean {
   }
   catch {
     return false;
+  }
+}
+
+const fileExtensionPattern = /\.(?:pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|csv|zip|rar|7z|gz|tar|jpe?g|png|gif|webp|avif|svg|ico|bmp|tiff?|heic|mp3|wav|m4a|ogg|mp4|m4v|mov|avi|webm|mkv|ics|epub|dmg|exe|apk|json|xml|txt)$/i;
+
+// Files are link-checked but never rendered: opening them in a browser aborts as a download, which used to surface as a page failure.
+export function looksLikeFileUrl(candidate: string): boolean {
+  try {
+    return fileExtensionPattern.test(new URL(candidate).pathname);
+  }
+  catch {
+    return false;
+  }
+}
+
+const trackedResourceTypes = new Set(["image", "stylesheet", "script", "font", "media"]);
+
+class NonHtmlResourceError extends Error {
+  constructor(readonly url: string, readonly contentType: string | null) {
+    super(`${url} is not an HTML page${contentType ? ` (${contentType})` : ""}.`);
   }
 }
 
@@ -1147,10 +1173,40 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
+    const failedResources = new Map<string, { url: string; status: number | null; type: string }>();
+    const scriptErrors: string[] = [];
+    page.on("response", (resourceResponse) => {
+      const type = resourceResponse.request().resourceType();
+      if (trackedResourceTypes.has(type) && resourceResponse.status() >= 400) {
+        failedResources.set(resourceResponse.url(), { url: resourceResponse.url(), status: resourceResponse.status(), type });
+      }
+    });
+    page.on("requestfailed", (request) => {
+      const type = request.resourceType();
+      const errorText = request.failure()?.errorText ?? "";
+      if (trackedResourceTypes.has(type) && !request.url().startsWith("data:") && !/ERR_ABORTED|ERR_BLOCKED_BY_CLIENT/.test(errorText)) {
+        failedResources.set(request.url(), { url: request.url(), status: null, type });
+      }
+    });
+    page.on("pageerror", (error) => {
+      if (scriptErrors.length < 10) {
+        scriptErrors.push(error.message.split("\n")[0] ?? error.message);
+      }
+    });
     const response = await page.goto(url, {
       waitUntil: "networkidle",
       timeout,
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.message.includes("Download is starting")) {
+        throw new NonHtmlResourceError(url, null);
+      }
+      throw error;
     });
+
+    const contentType = response?.headers()["content-type"] ?? null;
+    if (contentType && !/html/i.test(contentType)) {
+      throw new NonHtmlResourceError(url, contentType);
+    }
 
     const extracted = await page.evaluate(() => {
       const textRoot = document.querySelector("main, article, [role=\"main\"]") ?? document.body;
@@ -1236,6 +1292,8 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
       finalUrl: page.url(),
       httpStatus: response?.status() ?? null,
       ...extracted,
+      failedResources: [...failedResources.values()],
+      scriptErrors,
     };
   }
   finally {
@@ -1243,37 +1301,56 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
   }
 }
 
-async function checkUrl(targetUrl: string, fetchImpl: FetchLike): Promise<number | null> {
-  if (!isCheckableLinkTarget(targetUrl)) {
-    return null;
-  }
+interface LinkCheckResult {
+  status: number | null;
+  redirects: Array<{ url: string; status: number }>;
+}
 
+const maxRedirects = 10;
+
+async function requestStatus(url: string, fetchImpl: FetchLike): Promise<Response> {
   try {
-    const headResponse = await fetchImpl(targetUrl, {
-      method: "HEAD",
-      redirect: "follow",
-    });
-    if (headResponse.status === 405 || headResponse.status === 501) {
-      const getResponse = await fetchImpl(targetUrl, {
-        method: "GET",
-        redirect: "follow",
-      });
-      return getResponse.status;
+    const response = await fetchImpl(url, { method: "HEAD", redirect: "manual" });
+    if (response.status !== 405 && response.status !== 501) {
+      return response;
     }
-
-    return headResponse.status;
   }
   catch {
-    try {
-      const response = await fetchImpl(targetUrl, {
-        method: "GET",
-        redirect: "follow",
-      });
-      return response.status;
+    // Some servers drop HEAD requests entirely; fall through to GET.
+  }
+  return fetchImpl(url, { method: "GET", redirect: "manual" });
+}
+
+// Redirects are followed by hand so internal links that point at a redirect, or a chain of them, can be reported.
+async function checkLink(targetUrl: string, fetchImpl: FetchLike): Promise<LinkCheckResult> {
+  if (!isCheckableLinkTarget(targetUrl)) {
+    return { status: null, redirects: [] };
+  }
+
+  const redirects: LinkCheckResult["redirects"] = [];
+  const seen = new Set<string>([targetUrl]);
+  let current = targetUrl;
+
+  try {
+    for (let hop = 0; hop <= maxRedirects; hop += 1) {
+      const response = await requestStatus(current, fetchImpl);
+      const location = response.headers.get("location");
+      if (response.status < 300 || response.status >= 400 || !location) {
+        return { status: response.status, redirects };
+      }
+
+      const next = new URL(location, current).toString();
+      redirects.push({ url: next, status: response.status });
+      if (seen.has(next)) {
+        return { status: null, redirects };
+      }
+      seen.add(next);
+      current = next;
     }
-    catch {
-      return null;
-    }
+    return { status: null, redirects };
+  }
+  catch {
+    return { status: null, redirects };
   }
 }
 
@@ -1579,6 +1656,37 @@ export function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoM
     });
   }
 
+  if (extracted.failedResources.length > 0) {
+    const pageHost = hostOf(pageUrl, pageUrl);
+    const ownFailures = extracted.failedResources.filter(resource => hostOf(resource.url, pageUrl) === pageHost);
+    const examples = extracted.failedResources.slice(0, 3).map(resource => `${resource.url} (${resource.status ?? "no response"})`).join(", ");
+    issues.push({
+      pageUrl,
+      category: "broken_link",
+      code: "broken_resource",
+      severity: ownFailures.length > 0 ? "error" : "warning",
+      title: "Resources failed to load",
+      message: `${extracted.failedResources.length} ${extracted.failedResources.length === 1 ? "resource" : "resources"} failed to load: ${examples}${extracted.failedResources.length > 3 ? ", …" : ""}`,
+      evidence: {
+        resources: extracted.failedResources.slice(0, 20),
+      },
+    });
+  }
+
+  if (extracted.scriptErrors.length > 0) {
+    issues.push({
+      pageUrl,
+      category: "health",
+      code: "js_error",
+      severity: "warning",
+      title: "JavaScript errors",
+      message: `Uncaught error: ${extracted.scriptErrors[0]}${extracted.scriptErrors.length > 1 ? ` (and ${extracted.scriptErrors.length - 1} more)` : ""}`,
+      evidence: {
+        errors: extracted.scriptErrors,
+      },
+    });
+  }
+
   if (typoMatches.length > 0) {
     issues.push({
       pageUrl,
@@ -1655,7 +1763,7 @@ async function analysePage(
   typoLanguage: TypoLanguage,
   typoAllowlist: string[],
 ): Promise<PageAnalysis> {
-  const extracted = await extractPage(item.url, config.pageTimeoutMs);
+  const extracted = await extractPage(item.fetchUrl ?? item.url, config.pageTimeoutMs);
   const normalizedFinalUrl = normalizeDiscoveredUrl(extracted.finalUrl, context);
   const pageUrl = normalizedFinalUrl ?? item.url;
 
@@ -1708,9 +1816,14 @@ async function analysePage(
         continue;
       }
 
+      // Check the link exactly as written: stripping a trailing slash would turn every WordPress link into a redirect
+      // and report false broken links on servers that do not redirect.
+      const asWritten = new URL(link.href, pageUrl);
+      asWritten.hash = "";
+
       links.push({
         sourceUrl: pageUrl,
-        targetUrl: normalized,
+        targetUrl: asWritten.toString(),
         targetType: "internal",
         httpStatus: null,
         isBroken: false,
@@ -1718,9 +1831,10 @@ async function analysePage(
         nofollow: link.nofollow,
       });
 
-      if (!link.nofollow) {
+      if (!link.nofollow && !looksLikeFileUrl(normalized)) {
         discoveredUrls.push({
           url: normalized,
+          fetchUrl: asWritten.toString(),
           depth: item.depth + 1,
           fromSitemap: false,
         });
@@ -1785,6 +1899,42 @@ async function analysePage(
     }
   }
 
+  if (item.fromSitemap) {
+    const listedUrl = item.fetchUrl ?? item.url;
+    if (extracted.httpStatus !== null && extracted.httpStatus >= 400) {
+      issues.push({
+        pageUrl,
+        category: "seo",
+        code: "sitemap_lists_error",
+        severity: "error",
+        title: "Sitemap lists a page that errors",
+        message: `The sitemap lists ${listedUrl}, which returned ${extracted.httpStatus}.`,
+        evidence: { listedUrl, status: extracted.httpStatus },
+      });
+    }
+    else if (normalizeDiscoveredUrl(listedUrl, context) !== pageUrl) {
+      issues.push({
+        pageUrl,
+        category: "seo",
+        code: "sitemap_lists_redirect",
+        severity: "warning",
+        title: "Sitemap lists a redirected URL",
+        message: `The sitemap lists ${listedUrl}, which redirects to ${extracted.finalUrl}. List the final URL instead.`,
+        evidence: { listedUrl, finalUrl: extracted.finalUrl },
+      });
+    }
+    if (issues.some(issue => issue.code === "noindex")) {
+      issues.push({
+        pageUrl,
+        category: "seo",
+        code: "sitemap_lists_noindex",
+        severity: "warning",
+        title: "Sitemap lists a noindex page",
+        message: "This page asks search engines not to index it, but the sitemap asks them to. Remove it from the sitemap or drop the noindex.",
+      });
+    }
+  }
+
   return {
     page: {
       url: pageUrl,
@@ -1820,10 +1970,204 @@ function markBrokenLinkIssues(links: AuditLinkRecord[]): AuditIssueRecord[] {
       title: "Broken link detected",
       message: `${link.targetUrl} returned ${link.httpStatus ?? "no response"}.`,
       evidence: {
+        targetUrl: link.targetUrl,
         targetType: link.targetType,
         status: link.httpStatus,
       },
     }));
+}
+
+export function buildRedirectIssues(links: AuditLinkRecord[], redirects: Map<string, Array<{ url: string; status: number }>>): AuditIssueRecord[] {
+  const byPage = new Map<string, Map<string, { to: string; status: number; hops: number }>>();
+  for (const link of links) {
+    const chain = redirects.get(link.targetUrl);
+    if (link.targetType !== "internal" || !chain?.length || link.isBroken) {
+      continue;
+    }
+    const entries = byPage.get(link.sourceUrl) ?? new Map();
+    entries.set(link.targetUrl, { to: chain.at(-1)!.url, status: chain[0]!.status, hops: chain.length });
+    byPage.set(link.sourceUrl, entries);
+  }
+
+  return [...byPage.entries()].map(([pageUrl, entries]) => {
+    const list = [...entries.entries()].map(([from, entry]) => ({ from, ...entry }));
+    const examples = list.slice(0, 3).map(entry => `${entry.from} → ${entry.to} (${entry.status}${entry.hops > 1 ? `, ${entry.hops} hops` : ""})`).join("; ");
+    return {
+      pageUrl,
+      category: "crawl" as const,
+      code: "internal_link_redirects",
+      severity: list.some(entry => entry.hops > 1) ? "warning" as const : "info" as const,
+      title: "Links to redirected URLs",
+      message: `${list.length === 1 ? "1 link points to a URL that redirects" : `${list.length} links point to URLs that redirect`}: ${examples}${list.length > 3 ? "; …" : ""}. Link to the final URL instead.`,
+      evidence: { redirects: list.slice(0, 20) },
+    };
+  });
+}
+
+export function findOrphanPages(
+  pages: AuditPageRecord[],
+  links: AuditLinkRecord[],
+  baseUrl: string,
+  redirects: Map<string, Array<{ url: string; status: number }>> = new Map(),
+): AuditIssueRecord[] {
+  const context: SiteContext = { baseUrl, baseOrigin: new URL(baseUrl).origin, host: new URL(baseUrl).host };
+  const homepage = normalizeDiscoveredUrl(baseUrl, context);
+  // A link that lands on a page through a redirect still makes that page reachable.
+  const linked = new Set(links
+    .filter(link => link.targetType === "internal")
+    .map(link => ({
+      source: normalizeDiscoveredUrl(link.sourceUrl, context),
+      target: normalizeDiscoveredUrl(redirects.get(link.targetUrl)?.at(-1)?.url ?? link.targetUrl, context),
+    }))
+    .filter(link => link.target && link.target !== link.source)
+    .map(link => link.target));
+
+  return pages
+    .filter(page => page.fromSitemap && page.url !== homepage && (page.httpStatus ?? 200) < 400 && !linked.has(page.url))
+    .map(page => ({
+      pageUrl: page.url,
+      category: "seo" as const,
+      code: "orphan_page",
+      severity: "info" as const,
+      title: "Page only reachable from the sitemap",
+      message: "No crawled page links here, so visitors can only find it through search or the sitemap. Link to it from a related page or the navigation.",
+    }));
+}
+
+export function analyseSecurityHeaders(headers: Headers, isHttps: boolean): AuditIssueRecord | null {
+  const missing: string[] = [];
+  const hstsMissing = isHttps && !headers.get("strict-transport-security");
+  if (hstsMissing) {
+    missing.push("Strict-Transport-Security");
+  }
+  if (!headers.get("x-content-type-options")) {
+    missing.push("X-Content-Type-Options");
+  }
+  if (!headers.get("x-frame-options") && !headers.get("content-security-policy")?.includes("frame-ancestors")) {
+    missing.push("X-Frame-Options (or a CSP frame-ancestors rule)");
+  }
+  if (!headers.get("referrer-policy")) {
+    missing.push("Referrer-Policy");
+  }
+  if (!missing.length) {
+    return null;
+  }
+
+  return {
+    category: "health",
+    code: "missing_security_headers",
+    severity: hstsMissing ? "warning" : "info",
+    title: "Missing security headers",
+    message: `The homepage response is missing ${missing.join(", ")}.${hstsMissing ? " Without HSTS, browsers can still be tricked into loading the site over plain HTTP." : ""}`,
+    evidence: { missing },
+  };
+}
+
+export function findFaviconHref(html: string, baseUrl: string): string | null {
+  for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
+    const rel = /\brel\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1]?.toLowerCase().split(/\s+/) ?? [];
+    const href = /\bhref\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1];
+    if (rel.includes("icon") && href) {
+      try {
+        return new URL(href, baseUrl).toString();
+      }
+      catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
+function certificateExpiry(host: string): Promise<Date | null> {
+  return new Promise((resolve) => {
+    const socket = connectTls({ host, port: 443, servername: host, rejectUnauthorized: false, timeout: 10000 }, () => {
+      const validTo = socket.getPeerCertificate()?.valid_to;
+      socket.end();
+      resolve(validTo ? new Date(validTo) : null);
+    });
+    socket.on("error", () => resolve(null));
+    socket.on("timeout", () => {
+      socket.destroy();
+      resolve(null);
+    });
+  });
+}
+
+async function checkSiteHealth(baseUrl: string, fetchImpl: FetchLike): Promise<AuditIssueRecord[]> {
+  const issues: AuditIssueRecord[] = [];
+  const base = new URL(baseUrl);
+  const isHttps = base.protocol === "https:";
+
+  if (isHttps) {
+    const expires = await certificateExpiry(base.hostname);
+    if (expires) {
+      const daysLeft = Math.floor((expires.getTime() - Date.now()) / 86_400_000);
+      if (daysLeft <= 21) {
+        issues.push({
+          category: "health",
+          code: "ssl_certificate_expiring",
+          severity: daysLeft <= 7 ? "error" : "warning",
+          title: daysLeft < 0 ? "SSL certificate has expired" : "SSL certificate expires soon",
+          message: daysLeft < 0
+            ? `The certificate for ${base.hostname} expired on ${expires.toISOString().slice(0, 10)}, so browsers show a security warning.`
+            : `The certificate for ${base.hostname} expires on ${expires.toISOString().slice(0, 10)}, in ${daysLeft} ${daysLeft === 1 ? "day" : "days"}. Check that automatic renewal is working.`,
+          evidence: { expires: expires.toISOString(), daysLeft },
+        });
+      }
+    }
+
+    try {
+      const plain = await fetchImpl(`http://${base.host}/`, { method: "GET", redirect: "manual" });
+      const location = plain.headers.get("location") ?? "";
+      if (plain.status < 300 || (plain.status < 400 && !location.startsWith("https://"))) {
+        issues.push({
+          category: "health",
+          code: "http_not_redirected",
+          severity: "warning",
+          title: "HTTP does not redirect to HTTPS",
+          message: `http://${base.host}/ ${plain.status < 300 ? "loads without redirecting" : `redirects to ${location || "an unknown location"}`} instead of sending visitors to HTTPS.`,
+        });
+      }
+    }
+    catch {
+      // Nothing listening on port 80 is fine: there is no insecure version to reach.
+    }
+  }
+
+  try {
+    const homepage = await fetchImpl(baseUrl, { method: "GET", redirect: "follow" });
+    const securityIssue = analyseSecurityHeaders(homepage.headers, isHttps);
+    if (securityIssue) {
+      issues.push(securityIssue);
+    }
+
+    const iconHref = findFaviconHref(await homepage.text(), homepage.url || baseUrl);
+    const iconUrl = iconHref ?? new URL("/favicon.ico", baseUrl).toString();
+    const iconCheck = await checkLink(iconUrl, fetchImpl);
+    if (iconCheck.status === null || iconCheck.status >= 400) {
+      issues.push(iconHref
+        ? {
+            category: "health",
+            code: "broken_favicon",
+            severity: "warning",
+            title: "Favicon is broken",
+            message: `The page declares ${iconHref} as its icon, but it returned ${iconCheck.status ?? "no response"}.`,
+          }
+        : {
+            category: "health",
+            code: "missing_favicon",
+            severity: "info",
+            title: "No favicon",
+            message: "The homepage declares no icon and /favicon.ico is missing, so tabs and bookmarks show a blank icon.",
+          });
+    }
+  }
+  catch {
+    // The crawl already reports an unreachable homepage.
+  }
+
+  return issues;
 }
 
 function markCanonicalIssues(links: AuditLinkRecord[]): AuditIssueRecord[] {
@@ -1869,6 +2213,7 @@ export async function runAudit(
     onProgress?: (progress: AuditProgress) => void | Promise<void>;
     shouldCancel?: () => boolean | Promise<boolean>;
     getTypoAllowlist?: () => string[] | Promise<string[]>;
+    getLinkIgnores?: () => LinkIgnore[] | Promise<LinkIgnore[]>;
     crawlRules?: CrawlRules;
     discovery?: DiscoveryPreview;
     lighthouseTargets?: LighthouseTargets;
@@ -1963,7 +2308,11 @@ export async function runAudit(
     linksChecked: 0,
     queueSize: includedEntries.length,
   });
-  const queue: QueueItem[] = includedEntries.map(entry => ({
+  const fileEntries = includedEntries.filter(entry => looksLikeFileUrl(entry.url));
+  if (fileEntries.length) {
+    await emit(events, "info", "Skipped files listed for crawling", { count: fileEntries.length }, options.onEvent);
+  }
+  const queue: QueueItem[] = includedEntries.filter(entry => !looksLikeFileUrl(entry.url)).map(entry => ({
     url: entry.url,
     depth: 0,
     fromSitemap: entry.source === "sitemap",
@@ -2009,6 +2358,10 @@ export async function runAudit(
         );
       }
       catch (error) {
+        if (error instanceof NonHtmlResourceError) {
+          await emit(events, "info", "Skipped a non-HTML resource", { url: item.url, contentType: error.contentType }, options.onEvent);
+          return null;
+        }
         issues.push({
           pageUrl: item.url,
           category: "crawl",
@@ -2071,8 +2424,15 @@ export async function runAudit(
     }
   }
 
-  const uniqueLinks = dedupeUrls(links.map(link => link.targetUrl));
+  // Ignored targets are never requested: they are usually sites that block bots, and checking them only slows the audit.
+  const linkIgnores = options.getLinkIgnores ? await options.getLinkIgnores() : [];
+  const uniqueLinks = dedupeUrls(links.map(link => link.targetUrl)).filter(url => !isLinkIgnored(url, linkIgnores));
+  const ignoredLinkCount = links.filter(link => isLinkIgnored(link.targetUrl, linkIgnores)).length;
+  if (ignoredLinkCount) {
+    await emit(events, "info", "Skipped ignored links", { count: ignoredLinkCount }, options.onEvent);
+  }
   const linkStatusMap = new Map<string, number | null>();
+  const linkRedirectMap = new Map<string, LinkCheckResult["redirects"]>();
   const linkLimit = pLimit(config.linkConcurrency);
 
   for (let index = 0; index < uniqueLinks.length; index += config.linkConcurrency) {
@@ -2083,7 +2443,11 @@ export async function runAudit(
     }
 
     await Promise.all(batch.map(url => linkLimit(async () => {
-      linkStatusMap.set(url, await checkUrl(url, fetchImpl));
+      const result = await checkLink(url, fetchImpl);
+      linkStatusMap.set(url, result.status);
+      if (result.redirects.length) {
+        linkRedirectMap.set(url, result.redirects);
+      }
       checkedLinks += 1;
     })));
 
@@ -2100,12 +2464,19 @@ export async function runAudit(
   for (const link of links) {
     const status = linkStatusMap.get(link.targetUrl) ?? null;
     link.httpStatus = status;
-    link.isBroken = status === null || status >= 400;
+    link.isBroken = !isLinkIgnored(link.targetUrl, linkIgnores) && (status === null || status >= 400);
   }
 
   issues.push(...buildDuplicateContentIssues(pages));
   issues.push(...markBrokenLinkIssues(links));
   issues.push(...markCanonicalIssues(links));
+  issues.push(...buildRedirectIssues(links, linkRedirectMap));
+  // A crawl cut short by the page budget never sees every link, so orphans would be guesses.
+  if (!maxPagesReached) {
+    issues.push(...findOrphanPages(pages, links, normalizedBase, linkRedirectMap));
+  }
+  await emit(events, "info", "Checking site health", {}, options.onEvent);
+  issues.push(...await checkSiteHealth(normalizedBase, fetchImpl));
 
   const filteredIssues = filterTypoIssuesByAllowlist(issues, await getCurrentTypoAllowlist());
 

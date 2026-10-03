@@ -5,6 +5,7 @@ import type {
   CrawlRules,
   DiscoveryPreview,
   LighthouseTargets,
+  LinkIgnore,
   SessionUser,
   TypoLanguage,
   UserRole,
@@ -12,7 +13,7 @@ import type {
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { randomUUID } from "node:crypto";
-import { createEmptyCrawlRules, typoAllowlistSchema } from "@website-auditor/shared";
+import { createEmptyCrawlRules, isLinkIgnored, linkIgnoresSchema, typoAllowlistSchema } from "@website-auditor/shared";
 
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -350,9 +351,9 @@ export async function createWebsite(input: {
 
 export async function updateWebsite(
   id: string,
-  changes: Partial<{ name: string; isActive: boolean; typoLanguage: TypoLanguage; typoAllowlist: string[]; crawlRules: CrawlRules; lighthouseTargets: LighthouseTargets }>,
+  changes: Partial<{ name: string; isActive: boolean; typoLanguage: TypoLanguage; typoAllowlist: string[]; crawlRules: CrawlRules; lighthouseTargets: LighthouseTargets; linkIgnores: LinkIgnore[] }>,
 ) {
-  const { crawlRules, lighthouseTargets, typoAllowlist, ...rest } = changes;
+  const { crawlRules, lighthouseTargets, typoAllowlist, linkIgnores, ...rest } = changes;
   const [website] = await getDb().update(websites).set({
     ...rest,
     ...(typoAllowlist
@@ -370,6 +371,11 @@ export async function updateWebsite(
           lighthouseTargetsJson: lighthouseTargets,
         }
       : {}),
+    ...(linkIgnores
+      ? {
+          linkIgnoresJson: linkIgnores,
+        }
+      : {}),
     updatedAt: now(),
   }).where(eq(websites.id, id)).returning();
 
@@ -384,6 +390,7 @@ export async function createAuditRun(input: {
   crawlRules?: CrawlRules;
   discovery?: DiscoveryPreview;
   lighthouseTargets?: LighthouseTargets;
+  linkIgnores?: LinkIgnore[];
 }) {
   const [run] = await getDb().insert(auditRuns).values({
     id: createId(),
@@ -395,6 +402,7 @@ export async function createAuditRun(input: {
     typoAllowlistJson: input.typoAllowlist ?? [],
     crawlRulesJson: input.crawlRules ?? createEmptyCrawlRules(),
     lighthouseTargetsJson: input.lighthouseTargets ?? [],
+    linkIgnoresJson: input.linkIgnores ?? [],
     discoveryJson: input.discovery ?? {},
     summaryJson: {},
   }).returning();
@@ -455,6 +463,7 @@ export async function getAuditRun(id: string) {
     typoAllowlistJson: auditRuns.typoAllowlistJson,
     crawlRulesJson: auditRuns.crawlRulesJson,
     lighthouseTargetsJson: auditRuns.lighthouseTargetsJson,
+    linkIgnoresJson: auditRuns.linkIgnoresJson,
     discoveryJson: auditRuns.discoveryJson,
     startedAt: auditRuns.startedAt,
     finishedAt: auditRuns.finishedAt,
@@ -751,6 +760,7 @@ export async function getWebsiteDetails(id: string) {
     typoAllowlistJson: websites.typoAllowlistJson,
     crawlRulesJson: websites.crawlRulesJson,
     lighthouseTargetsJson: websites.lighthouseTargetsJson,
+    linkIgnoresJson: websites.linkIgnoresJson,
     createdByUserId: websites.createdByUserId,
     isActive: websites.isActive,
     createdAt: websites.createdAt,
@@ -890,6 +900,78 @@ export async function allowTypoWordForWebsiteAndRun(input: {
     word: normalizedWord,
     typoAllowlist: nextWebsiteAllowlist,
   };
+}
+
+// Broken-link issues carry their target in evidence from now on; older runs only have it at the start of the message.
+export function brokenLinkTarget(issue: { message: string; evidenceJson: unknown }): string {
+  const evidence = issue.evidenceJson && typeof issue.evidenceJson === "object" ? issue.evidenceJson as Record<string, unknown> : {};
+  return typeof evidence.targetUrl === "string" ? evidence.targetUrl : issue.message.split(" ")[0] ?? "";
+}
+
+export async function ignoreBrokenLinkForWebsiteAndRun(input: {
+  websiteId: string;
+  runId: string;
+  rule: LinkIgnore;
+}) {
+  const [website] = await getDb().select({ linkIgnoresJson: websites.linkIgnoresJson }).from(websites).where(eq(websites.id, input.websiteId)).limit(1);
+  const [run] = await getDb().select({
+    status: auditRuns.status,
+    linkIgnoresJson: auditRuns.linkIgnoresJson,
+    pageCount: auditRuns.pageCount,
+    typoCount: auditRuns.typoCount,
+    seoIssueCount: auditRuns.seoIssueCount,
+    summaryJson: auditRuns.summaryJson,
+  }).from(auditRuns).where(eq(auditRuns.id, input.runId)).limit(1);
+
+  const withRule = (current: unknown) => {
+    const rules = linkIgnoresSchema.parse(current ?? []);
+    return rules.some(rule => rule.kind === input.rule.kind && rule.value === input.rule.value) ? rules : [...rules, input.rule];
+  };
+  const linkIgnores = withRule(website?.linkIgnoresJson);
+
+  await getDb().update(websites).set({ linkIgnoresJson: linkIgnores, updatedAt: now() }).where(eq(websites.id, input.websiteId));
+  await getDb().update(auditRuns).set({ linkIgnoresJson: withRule(run?.linkIgnoresJson) }).where(eq(auditRuns.id, input.runId));
+
+  if (!run || run.status === "queued" || run.status === "running") {
+    return { linkIgnores };
+  }
+
+  const brokenLinks = await getDb().select({ id: auditLinks.id, targetUrl: auditLinks.targetUrl }).from(auditLinks).where(and(eq(auditLinks.auditRunId, input.runId), eq(auditLinks.isBroken, true)));
+  const ignoredLinkIds = brokenLinks.filter(link => isLinkIgnored(link.targetUrl, [input.rule])).map(link => link.id);
+  if (ignoredLinkIds.length) {
+    await getDb().update(auditLinks).set({ isBroken: false }).where(inArray(auditLinks.id, ignoredLinkIds));
+  }
+
+  const brokenLinkIssues = await getDb().select({ id: auditIssues.id, message: auditIssues.message, evidenceJson: auditIssues.evidenceJson }).from(auditIssues).where(and(eq(auditIssues.auditRunId, input.runId), eq(auditIssues.code, "broken_link")));
+  const ignoredIssueIds = brokenLinkIssues.filter(issue => isLinkIgnored(brokenLinkTarget(issue), [input.rule])).map(issue => issue.id);
+  if (ignoredIssueIds.length) {
+    await getDb().delete(auditIssues).where(inArray(auditIssues.id, ignoredIssueIds));
+  }
+
+  const [{ issueCount } = { issueCount: 0 }] = await getDb().select({ issueCount: sql<number>`count(*)::int` }).from(auditIssues).where(eq(auditIssues.auditRunId, input.runId));
+  const [{ brokenLinkCount } = { brokenLinkCount: 0 }] = await getDb().select({ brokenLinkCount: sql<number>`count(*)::int` }).from(auditLinks).where(and(eq(auditLinks.auditRunId, input.runId), eq(auditLinks.isBroken, true)));
+  const summaryJson = (run.summaryJson ?? {}) as Record<string, unknown>;
+
+  await getDb().update(auditRuns).set({
+    issueCount,
+    brokenLinkCount,
+    summaryJson: {
+      ...summaryJson,
+      auditSummary: buildAuditSummaryText({
+        pageCount: run.pageCount,
+        issueCount,
+        brokenLinkCount,
+        typoCount: run.typoCount,
+        seoIssueCount: run.seoIssueCount,
+        crawledFromSitemap: typeof summaryJson.crawledFromSitemap === "number" ? summaryJson.crawledFromSitemap : 0,
+        lighthouse: summaryJson.lighthouse && typeof summaryJson.lighthouse === "object"
+          ? summaryJson.lighthouse as { results?: Array<{ performanceScore?: number | null }> }
+          : undefined,
+      }),
+    },
+  }).where(eq(auditRuns.id, input.runId));
+
+  return { linkIgnores, removedIssues: ignoredIssueIds.length };
 }
 
 export type AuditRunRecord = Awaited<ReturnType<typeof getAuditRun>>;

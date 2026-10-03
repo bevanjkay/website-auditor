@@ -15,6 +15,7 @@ import {
   crawlRulesSchema,
   discoveryPreviewSchema,
   lighthouseTargetsSchema,
+  linkIgnoresSchema,
   typoAllowlistSchema,
   typoLanguageSchema,
 } from "@website-auditor/shared";
@@ -103,6 +104,10 @@ const worker = new Worker<AuditJobPayload>(
         getTypoAllowlist: async () => {
           const latestRun = await getAuditRun(run.id);
           return typoAllowlistSchema.parse(latestRun?.typoAllowlistJson ?? typoAllowlist);
+        },
+        getLinkIgnores: async () => {
+          const latestRun = await getAuditRun(run.id);
+          return linkIgnoresSchema.parse(latestRun?.linkIgnoresJson ?? []);
         },
         onEvent: async (event) => {
           await appendAuditEvent(run.id, event);

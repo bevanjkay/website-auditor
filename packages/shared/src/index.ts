@@ -12,7 +12,7 @@ export const auditQueueName = "audit-site";
 export const issueSeverities = ["info", "warning", "error"] as const;
 export type IssueSeverity = (typeof issueSeverities)[number];
 
-export const issueCategories = ["crawl", "broken_link", "typo", "seo", "security"] as const;
+export const issueCategories = ["crawl", "broken_link", "typo", "seo", "security", "health"] as const;
 export type IssueCategory = (typeof issueCategories)[number];
 
 export const crawlRuleMatchers = ["glob", "exact", "prefix"] as const;
@@ -40,6 +40,71 @@ export const typoLanguageSchema = z.enum(typoLanguages).default("en");
 export const typoAllowlistWordSchema = z.string().trim().min(2).max(100).transform(value => value.toLowerCase());
 export const typoAllowlistSchema = z.array(typoAllowlistWordSchema).max(500).default([]);
 
+export const linkIgnoreKinds = ["url", "domain"] as const;
+export const linkIgnoreSchema = z.object({
+  kind: z.enum(linkIgnoreKinds),
+  value: z.string().trim().min(1).max(2048),
+});
+export const linkIgnoresSchema = z.array(linkIgnoreSchema).max(200).default([]);
+export type LinkIgnore = z.infer<typeof linkIgnoreSchema>;
+
+const domainPattern = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
+
+// A bare host ignores the whole domain; anything with a path ignores that one URL.
+export function parseLinkIgnore(input: string): LinkIgnore | null {
+  const value = input.trim();
+  const domain = value.toLowerCase().replace(/^\*\./, "").replace(/\/$/, "");
+  if (domainPattern.test(domain)) {
+    return { kind: "domain", value: domain };
+  }
+
+  if (/^[a-z][a-z\d+.-]*:/i.test(value) && !/^https?:\/\//i.test(value)) {
+    return null;
+  }
+
+  try {
+    const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    if (!domainPattern.test(url.hostname)) {
+      return null;
+    }
+    url.hash = "";
+    return { kind: "url", value: url.toString() };
+  }
+  catch {
+    return null;
+  }
+}
+
+function comparableUrl(value: string) {
+  try {
+    const url = new URL(value);
+    url.hash = "";
+    return url.toString().replace(/\/$/, "");
+  }
+  catch {
+    return value.replace(/\/$/, "");
+  }
+}
+
+export function isLinkIgnored(targetUrl: string, ignores: LinkIgnore[]): boolean {
+  if (!ignores.length) {
+    return false;
+  }
+
+  let host = "";
+  try {
+    host = new URL(targetUrl).hostname.toLowerCase();
+  }
+  catch {
+    return false;
+  }
+
+  const target = comparableUrl(targetUrl);
+  return ignores.some(rule => rule.kind === "domain"
+    ? host === rule.value || host.endsWith(`.${rule.value}`)
+    : comparableUrl(rule.value) === target);
+}
+
 export const websiteInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
   baseUrl: z.string().trim().min(1).max(2048),
@@ -53,6 +118,7 @@ export const websiteUpdateSchema = z.object({
   lighthouseTargets: lighthouseTargetsSchema.optional(),
   typoLanguage: typoLanguageSchema.optional(),
   typoAllowlist: typoAllowlistSchema.optional(),
+  linkIgnores: linkIgnoresSchema.optional(),
 });
 
 export const addTypoAllowlistWordSchema = z.object({

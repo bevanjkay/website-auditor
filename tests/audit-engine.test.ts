@@ -1,14 +1,19 @@
 import type { ExtractedPage } from "@website-auditor/audit-engine";
 
 import {
+  analyseSecurityHeaders,
   buildAllowSuggestions,
   buildDenySuggestions,
   buildDiscoveryPreview,
   buildDuplicateContentIssues,
   buildPageIssues,
+  buildRedirectIssues,
   detectTypos,
   extractLighthouseFindings,
+  findFaviconHref,
+  findOrphanPages,
   isCheckableLinkTarget,
+  looksLikeFileUrl,
   parseRobotsForSitemaps,
   parseSitemapXml,
   redirectsAwayFromSite,
@@ -39,6 +44,8 @@ function makeExtractedPage(overrides: Partial<ExtractedPage> = {}): ExtractedPag
     hasViewport: true,
     headingLevels: [1, 2, 2, 3],
     insecureResources: [],
+    failedResources: [],
+    scriptErrors: [],
     ...overrides,
   };
 }
@@ -414,5 +421,116 @@ describe("buildPageIssues content checks", () => {
     expect(codesFor(makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }))).toContain("mixed_content");
     expect(buildPageIssues("http://example.com/page", makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }), [])
       .map(issue => issue.code)).not.toContain("mixed_content");
+  });
+});
+
+describe("looksLikeFileUrl", () => {
+  it("recognises documents, images and media by their path", () => {
+    expect(looksLikeFileUrl("https://example.com/files/term-4-newsletter.PDF")).toBe(true);
+    expect(looksLikeFileUrl("https://example.com/wp-content/uploads/hero.jpg?ver=2")).toBe(true);
+    expect(looksLikeFileUrl("https://example.com/events/rally.ics")).toBe(true);
+  });
+
+  it("leaves pages alone, including ones whose query mentions a file", () => {
+    expect(looksLikeFileUrl("https://example.com/about/")).toBe(false);
+    expect(looksLikeFileUrl("https://example.com/download?file=report.pdf")).toBe(false);
+    expect(looksLikeFileUrl("https://example.com/index.php")).toBe(false);
+  });
+});
+
+describe("resource and script checks", () => {
+  const pageUrl = "https://example.com/page";
+
+  it("reports resources that failed to load, as an error when the site's own files are missing", () => {
+    const issues = buildPageIssues(pageUrl, makeExtractedPage({
+      failedResources: [
+        { url: "https://example.com/wp-content/uploads/hero.jpg", status: 404, type: "image" },
+        { url: "https://cdn.other.test/widget.js", status: null, type: "script" },
+      ],
+    }), []);
+    const issue = issues.find(entry => entry.code === "broken_resource");
+
+    expect(issue?.severity).toBe("error");
+    expect(issue?.message).toContain("2 resources failed to load");
+  });
+
+  it("treats third-party failures alone as a warning", () => {
+    const issues = buildPageIssues(pageUrl, makeExtractedPage({
+      failedResources: [{ url: "https://cdn.other.test/widget.js", status: 500, type: "script" }],
+    }), []);
+
+    expect(issues.find(entry => entry.code === "broken_resource")?.severity).toBe("warning");
+  });
+
+  it("reports uncaught JavaScript errors", () => {
+    const issues = buildPageIssues(pageUrl, makeExtractedPage({ scriptErrors: ["TypeError: x is undefined"] }), []);
+
+    expect(issues.find(entry => entry.code === "js_error")?.message).toContain("TypeError: x is undefined");
+  });
+});
+
+describe("site health checks", () => {
+  it("lists missing security headers and escalates when HTTPS is not enforced", () => {
+    const issue = analyseSecurityHeaders(new Headers({ "x-content-type-options": "nosniff" }), true);
+
+    expect(issue?.severity).toBe("warning");
+    expect(issue?.message).toContain("Strict-Transport-Security");
+    expect(issue?.message).not.toContain("X-Content-Type-Options");
+  });
+
+  it("accepts a page with the expected headers", () => {
+    expect(analyseSecurityHeaders(new Headers({
+      "strict-transport-security": "max-age=31536000",
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "frame-ancestors 'self'",
+      "referrer-policy": "strict-origin-when-cross-origin",
+    }), true)).toBeNull();
+  });
+
+  it("finds the favicon declared in the page head", () => {
+    expect(findFaviconHref("<link rel=\"stylesheet\" href=\"/a.css\"><link href=\"/img/icon.png\" rel=\"shortcut icon\">", "https://example.com/")).toBe("https://example.com/img/icon.png");
+    expect(findFaviconHref("<link rel=\"apple-touch-icon\" href=\"/touch.png\">", "https://example.com/")).toBeNull();
+  });
+});
+
+describe("redirect and sitemap checks", () => {
+  const link = (sourceUrl: string, targetUrl: string) => ({ sourceUrl, targetUrl, targetType: "internal" as const, httpStatus: 200, isBroken: false, anchorText: null, nofollow: false });
+
+  it("groups internal links to redirects by page and flags chains", () => {
+    const issues = buildRedirectIssues(
+      [link("https://example.com/", "https://example.com/old"), link("https://example.com/", "https://example.com/older"), link("https://example.com/about", "https://example.com/fine")],
+      new Map([
+        ["https://example.com/old", [{ url: "https://example.com/new", status: 301 }]],
+        ["https://example.com/older", [{ url: "https://example.com/old", status: 301 }, { url: "https://example.com/new", status: 301 }]],
+      ]),
+    );
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.pageUrl).toBe("https://example.com/");
+    expect(issues[0]?.severity).toBe("warning");
+    expect(issues[0]?.message).toContain("2 links");
+  });
+
+  it("finds sitemap pages that no crawled page links to", () => {
+    const page = (url: string) => ({ url, canonicalUrl: null, httpStatus: 200, depth: 0, fromSitemap: true, title: null, metaDescription: null, h1: null, wordCount: 0, renderedAt: "", pageDigest: "" });
+    const issues = findOrphanPages(
+      [page("https://example.com/"), page("https://example.com/about"), page("https://example.com/hidden")],
+      [link("https://example.com/", "https://example.com/about/")],
+      "https://example.com/",
+    );
+
+    expect(issues.map(issue => issue.pageUrl)).toEqual(["https://example.com/hidden"]);
+  });
+
+  it("counts pages reached through a redirect as linked, and skips error pages", () => {
+    const page = (url: string, httpStatus = 200) => ({ url, canonicalUrl: null, httpStatus, depth: 0, fromSitemap: true, title: null, metaDescription: null, h1: null, wordCount: 0, renderedAt: "", pageDigest: "" });
+    const issues = findOrphanPages(
+      [page("https://example.com/new"), page("https://example.com/gone", 404)],
+      [link("https://example.com/", "https://example.com/old")],
+      "https://example.com/",
+      new Map([["https://example.com/old", [{ url: "https://example.com/new/", status: 301 }]]]),
+    );
+
+    expect(issues).toEqual([]);
   });
 });

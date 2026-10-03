@@ -332,11 +332,59 @@ function evidenceEntries(issue: AuditIssueRow) {
       if (Array.isArray(value) && value.every(item => typeof item === "string" || typeof item === "number")) {
         return { key, label: humanise(key), list: value.map(String), text: null as string | null };
       }
+      if (Array.isArray(value) && value.every(item => item && typeof item === "object")) {
+        const list = value.map((item: Record<string, unknown>) => typeof item.from === "string" && typeof item.to === "string"
+          ? `${item.from} → ${item.to}`
+          : typeof item.url === "string"
+            ? `${item.url} (${item.status ?? "no response"}${typeof item.type === "string" ? `, ${item.type}` : ""})`
+            : JSON.stringify(item));
+        return { key, label: humanise(key), list, text: null as string | null };
+      }
       if (typeof value === "object") {
         return { key, label: humanise(key), list: null, text: JSON.stringify(value, null, 2) };
       }
       return { key, label: humanise(key), list: null, text: String(value) };
     });
+}
+
+const siteHost = computed(() => {
+  try {
+    return run.value ? new URL(run.value.baseUrl).hostname.toLowerCase() : "";
+  }
+  catch {
+    return "";
+  }
+});
+
+function hostOfUrl(url: string) {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+  }
+  catch {
+    return "";
+  }
+}
+
+const linkIgnorePending = ref<string | null>(null);
+const linkNotice = ref<{ tone: "success" | "error"; message: string } | null>(null);
+
+async function ignoreLink(kind: "url" | "domain", value: string) {
+  linkIgnorePending.value = `${kind}:${value}`;
+  linkNotice.value = null;
+  try {
+    await $fetch(`/api/audits/${auditId.value}/link-ignores`, { method: "POST", body: { kind, value } });
+    linkNotice.value = {
+      tone: "success",
+      message: `${kind === "domain" ? `Links to ${value}` : value} will be ignored. They're removed from this report and future audits won't check them.`,
+    };
+    await Promise.all([refreshRun(), refreshIssues(), refreshLinks(), refreshComparison()]);
+  }
+  catch (error) {
+    linkNotice.value = { tone: "error", message: getErrorMessage(error, "Couldn't ignore that link.") };
+  }
+  finally {
+    linkIgnorePending.value = null;
+  }
 }
 
 const typoPending = ref<string[]>([]);
@@ -1326,6 +1374,26 @@ onBeforeUnmount(() => {
             aria-labelledby="tab-links"
             class="tab-panel stack"
           >
+            <AlertMessage
+              v-if="linkNotice"
+              :tone="linkNotice.tone"
+              dismissible
+              @dismiss="linkNotice = null"
+            >
+              {{ linkNotice.message }}
+              <template
+                v-if="linkNotice.tone === 'success'"
+                #actions
+              >
+                <NuxtLink
+                  class="btn btn-sm"
+                  :to="`/websites/${run.websiteId}/settings#ignored-links-heading`"
+                >
+                  Manage ignored links
+                </NuxtLink>
+              </template>
+            </AlertMessage>
+
             <template v-if="brokenLinkGroups.length">
               <p class="text-sm text-secondary">
                 {{ pluralize(brokenLinkGroups.length, 'broken link target') }}. Internal links first, then by how many pages link to them.
@@ -1353,7 +1421,30 @@ onBeforeUnmount(() => {
                       <span>{{ pluralize(group.sources.length, 'page') }}</span>
                     </span>
                   </summary>
-                  <div class="disclosure-body">
+                  <div class="disclosure-body stack-sm">
+                    <div class="row">
+                      <button
+                        type="button"
+                        class="btn btn-sm"
+                        :disabled="linkIgnorePending !== null"
+                        @click="ignoreLink('url', group.targetUrl)"
+                      >
+                        <AppIcon
+                          name="ban"
+                          :size="14"
+                        />
+                        Ignore this URL
+                      </button>
+                      <button
+                        v-if="hostOfUrl(group.targetUrl) && hostOfUrl(group.targetUrl) !== siteHost.replace(/^www\./, '')"
+                        type="button"
+                        class="btn btn-sm btn-ghost"
+                        :disabled="linkIgnorePending !== null"
+                        @click="ignoreLink('domain', hostOfUrl(group.targetUrl))"
+                      >
+                        Ignore all links to {{ hostOfUrl(group.targetUrl) }}
+                      </button>
+                    </div>
                     <ul class="occurrence-list">
                       <li
                         v-for="source in group.sources"

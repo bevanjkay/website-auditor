@@ -1,7 +1,7 @@
 import { buildDiscoveryPreview, discoverAuditCandidates } from "@website-auditor/audit-engine";
 
 import { createAuditRun, getWebsiteById } from "@website-auditor/db";
-import { crawlRulesSchema, lighthouseTargetsSchema, typoAllowlistSchema, typoLanguageSchema } from "@website-auditor/shared";
+import { crawlRulesSchema, lighthouseTargetsSchema, linkIgnoresSchema, typoAllowlistSchema, typoLanguageSchema } from "@website-auditor/shared";
 import { createError, defineEventHandler, getRouterParam } from "h3";
 
 import { requireUser } from "../../../utils/auth.js";
@@ -37,6 +37,7 @@ export default defineEventHandler(async (event) => {
   const lighthouseTargets = lighthouseTargetsSchema.parse(website.lighthouseTargetsJson ?? []);
   const typoLanguage = typoLanguageSchema.parse(website.typoLanguage ?? "en");
   const typoAllowlist = typoAllowlistSchema.parse(website.typoAllowlistJson ?? []);
+  const linkIgnores = linkIgnoresSchema.parse(website.linkIgnoresJson ?? []);
   const discovery = buildDiscoveryPreview(
     await discoverAuditCandidates(website.baseUrl),
     crawlRules,
@@ -57,6 +58,7 @@ export default defineEventHandler(async (event) => {
     crawlRules,
     discovery,
     lighthouseTargets,
+    linkIgnores,
   });
 
   await getAuditQueue().add(run.id, {
