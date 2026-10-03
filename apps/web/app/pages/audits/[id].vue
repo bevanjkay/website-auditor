@@ -332,6 +332,14 @@ function evidenceEntries(issue: AuditIssueRow) {
       if (Array.isArray(value) && value.every(item => typeof item === "string" || typeof item === "number")) {
         return { key, label: humanise(key), list: value.map(String), text: null as string | null };
       }
+      if (Array.isArray(value) && value.every(item => item && typeof item === "object")) {
+        const list = value.map((item: Record<string, unknown>) => typeof item.from === "string" && typeof item.to === "string"
+          ? `${item.from} → ${item.to}`
+          : typeof item.url === "string"
+            ? `${item.url} (${item.status ?? "no response"}${typeof item.type === "string" ? `, ${item.type}` : ""})`
+            : JSON.stringify(item));
+        return { key, label: humanise(key), list, text: null as string | null };
+      }
       if (typeof value === "object") {
         return { key, label: humanise(key), list: null, text: JSON.stringify(value, null, 2) };
       }
