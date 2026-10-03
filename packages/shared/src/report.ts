@@ -76,6 +76,7 @@ const categoryLabels: Record<string, string> = {
   typo: "Typos",
   seo: "SEO",
   security: "Security",
+  health: "Site health",
 };
 
 const maxOccurrencesPerGroup = 100;

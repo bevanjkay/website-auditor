@@ -28,7 +28,7 @@ A private, self-hosted auditor for a known portfolio, not a SaaS crawler: browse
 ## Capabilities and Constraints
 
 - Run statuses: queued, running, cancelled, completed, completed with limits (page/depth budget hit), failed.
-- Issue categories: crawl, broken link, typo, SEO, security; severities: error, warning, info.
+- Issue categories: crawl, broken link (including failed page resources), typo, SEO (including sitemap hygiene), security, site health (SSL expiry, security headers, HTTPS redirect, favicon, JavaScript errors); severities: error, warning, info.
 - Crawl rules: allowlist and denylist of glob, exact or prefix matchers (allowlist applies first; denylist wins on conflict), with discovery suggestions.
 - Lighthouse: the homepage is always audited, plus up to 10 additional URLs.
 - Typo checks: per-site language (en, en-AU, en-GB, en-US) and a per-site allowlist.
