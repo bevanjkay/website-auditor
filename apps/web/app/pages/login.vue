@@ -3,6 +3,8 @@ definePageMeta({
   public: true,
 });
 
+useHead({ title: "Sign in" });
+
 const form = reactive({
   username: "",
   password: "",
@@ -29,7 +31,10 @@ async function submit() {
     await navigateTo("/");
   }
   catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Login failed.";
+    const status = (error as { statusCode?: number }).statusCode;
+    errorMessage.value = status === 401 || status === 400
+      ? "That username and password don't match. Check them and try again."
+      : getErrorMessage(error, "Couldn't sign in. Try again in a moment.");
   }
   finally {
     pending.value = false;
@@ -39,57 +44,73 @@ async function submit() {
 
 <template>
   <div class="login-shell">
-    <section class="hero-card login-card stack">
-      <div>
-        <p class="muted">
-          Private instance
-        </p>
-        <h2>Website Auditor</h2>
-        <p class="muted">
-          Sign in to manage websites, run browser-rendered audits, and review issue history.
-        </p>
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="brand-mark">
+          <AppIcon
+            name="brand"
+            :size="16"
+          />
+        </span>
+        Website Auditor
       </div>
 
       <form
-        class="form-grid"
+        class="panel"
         @submit.prevent="submit"
       >
-        <div class="field">
-          <label for="username">Username</label>
-          <input
-            id="username"
-            v-model="form.username"
-            autocomplete="username"
-            required
+        <div class="panel-body form-grid">
+          <div class="stack-sm">
+            <h1>Sign in</h1>
+            <p class="text-secondary">
+              This is a private installation. Ask an administrator if you need an account.
+            </p>
+          </div>
+
+          <AlertMessage
+            v-if="errorMessage"
+            tone="error"
           >
-        </div>
+            {{ errorMessage }}
+          </AlertMessage>
 
-        <div class="field">
-          <label for="password">Password</label>
-          <input
-            id="password"
-            v-model="form.password"
-            type="password"
-            autocomplete="current-password"
-            required
+          <div class="field">
+            <label for="username">Username</label>
+            <input
+              id="username"
+              v-model="form.username"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              v-model="form.password"
+              type="password"
+              autocomplete="current-password"
+              required
+            >
+          </div>
+
+          <button
+            class="btn btn-primary"
+            :disabled="pending"
+            type="submit"
           >
+            <AppIcon
+              v-if="pending"
+              name="loader"
+              class="spin"
+            />
+            {{ pending ? 'Signing in…' : 'Sign in' }}
+          </button>
         </div>
-
-        <p
-          v-if="errorMessage"
-          class="notice"
-        >
-          {{ errorMessage }}
-        </p>
-
-        <button
-          class="button button-primary"
-          :disabled="pending"
-          type="submit"
-        >
-          {{ pending ? 'Signing in…' : 'Sign in' }}
-        </button>
       </form>
-    </section>
+    </div>
   </div>
 </template>

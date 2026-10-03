@@ -6,3 +6,7 @@
 ## Datastore images
 - `postgres` and `redis` majors are pinned out of Dependabot in the synced `.github/dependabot.yml` (source of truth: `bevanjkay/.github`), so they never arrive as a PR. Bumping one is a migration, not a tag change: Postgres 18+ puts `PGDATA` at `/var/lib/postgresql/<major>/docker`, so the compose mount has to move to `/var/lib/postgresql` and the existing cluster needs `pg_upgrade` or a dump/restore.
 - `scripts/compose-smoke.sh` is the only check that starts `docker-compose.yml`; lint, typecheck, test and build all pass on a stack that cannot boot. CI runs it directly, so it needs no Node setup; `pnpm test:compose` is a local alias for the same script.
+
+## Web app
+- `apps/web/tsconfig.json` does not map Nuxt's `~` alias, so `vue-tsc` fails on `~/…` imports; use relative paths for type imports under `app/`.
+- The SPA can be checked visually without Postgres or Redis: run the built `.output/server/index.mjs` with a dummy `DATABASE_URL` and fulfil `/api/**` from fixtures with Playwright route mocking.

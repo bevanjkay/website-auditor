@@ -1,0 +1,1563 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T02:05:14Z",
+  "title": "Design System: Website Auditor",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Operator Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": [
+          "oklch(15.0% 0.081 262.9)",
+          "oklch(26.4% 0.133 262.9)",
+          "oklch(37.9% 0.189 262.9)",
+          "oklch(49.3% 0.215 262.9)",
+          "oklch(60.7% 0.213 262.9)",
+          "oklch(72.1% 0.144 262.9)",
+          "oklch(83.6% 0.081 262.9)",
+          "oklch(95.0% 0.024 262.9)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Operator Blue Hover",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "oklch(15.0% 0.105 264.4)",
+          "oklch(26.4% 0.183 264.4)",
+          "oklch(37.9% 0.217 264.4)",
+          "oklch(49.3% 0.217 264.4)",
+          "oklch(60.7% 0.212 264.4)",
+          "oklch(72.1% 0.144 264.4)",
+          "oklch(83.6% 0.081 264.4)",
+          "oklch(95.0% 0.024 264.4)"
+        ]
+      },
+      "accent-text": {
+        "role": "primary",
+        "displayName": "Link Blue",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "oklch(15.0% 0.105 264.4)",
+          "oklch(26.4% 0.183 264.4)",
+          "oklch(37.9% 0.217 264.4)",
+          "oklch(49.3% 0.217 264.4)",
+          "oklch(60.7% 0.212 264.4)",
+          "oklch(72.1% 0.144 264.4)",
+          "oklch(83.6% 0.081 264.4)",
+          "oklch(95.0% 0.024 264.4)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Blue Wash",
+        "canonical": "#eef4ff",
+        "tonalRamp": [
+          "oklch(15.0% 0.016 262.8)",
+          "oklch(26.4% 0.016 262.8)",
+          "oklch(37.9% 0.016 262.8)",
+          "oklch(49.3% 0.016 262.8)",
+          "oklch(60.7% 0.016 262.8)",
+          "oklch(72.1% 0.016 262.8)",
+          "oklch(83.6% 0.016 262.8)",
+          "oklch(95.0% 0.016 262.8)"
+        ]
+      },
+      "accent-border": {
+        "role": "primary",
+        "displayName": "Blue Edge",
+        "canonical": "#c7d7fe",
+        "tonalRamp": [
+          "oklch(15.0% 0.057 267.6)",
+          "oklch(26.4% 0.057 267.6)",
+          "oklch(37.9% 0.057 267.6)",
+          "oklch(49.3% 0.057 267.6)",
+          "oklch(60.7% 0.057 267.6)",
+          "oklch(72.1% 0.057 267.6)",
+          "oklch(83.6% 0.057 267.6)",
+          "oklch(95.0% 0.024 267.6)"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On Blue",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.4% 0.000 89.9)",
+          "oklch(37.9% 0.000 89.9)",
+          "oklch(49.3% 0.000 89.9)",
+          "oklch(60.7% 0.000 89.9)",
+          "oklch(72.1% 0.000 89.9)",
+          "oklch(83.6% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "focus-ring": {
+        "role": "primary",
+        "displayName": "Focus Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": [
+          "oklch(15.0% 0.081 262.9)",
+          "oklch(26.4% 0.133 262.9)",
+          "oklch(37.9% 0.189 262.9)",
+          "oklch(49.3% 0.215 262.9)",
+          "oklch(60.7% 0.213 262.9)",
+          "oklch(72.1% 0.144 262.9)",
+          "oklch(83.6% 0.081 262.9)",
+          "oklch(95.0% 0.024 262.9)"
+        ]
+      },
+      "selection": {
+        "role": "primary",
+        "displayName": "Selection",
+        "canonical": "#c7d7fe",
+        "tonalRamp": [
+          "oklch(15.0% 0.057 267.6)",
+          "oklch(26.4% 0.057 267.6)",
+          "oklch(37.9% 0.057 267.6)",
+          "oklch(49.3% 0.057 267.6)",
+          "oklch(60.7% 0.057 267.6)",
+          "oklch(72.1% 0.057 267.6)",
+          "oklch(83.6% 0.057 267.6)",
+          "oklch(95.0% 0.024 267.6)"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "#f6f7f9",
+        "tonalRamp": [
+          "oklch(15.0% 0.003 264.5)",
+          "oklch(26.4% 0.003 264.5)",
+          "oklch(37.9% 0.003 264.5)",
+          "oklch(49.3% 0.003 264.5)",
+          "oklch(60.7% 0.003 264.5)",
+          "oklch(72.1% 0.003 264.5)",
+          "oklch(83.6% 0.003 264.5)",
+          "oklch(95.0% 0.003 264.5)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.4% 0.000 89.9)",
+          "oklch(37.9% 0.000 89.9)",
+          "oklch(49.3% 0.000 89.9)",
+          "oklch(60.7% 0.000 89.9)",
+          "oklch(72.1% 0.000 89.9)",
+          "oklch(83.6% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "surface-subtle": {
+        "role": "neutral",
+        "displayName": "Recessed Sheet",
+        "canonical": "#f2f4f7",
+        "tonalRamp": [
+          "oklch(15.0% 0.005 258.3)",
+          "oklch(26.4% 0.005 258.3)",
+          "oklch(37.9% 0.005 258.3)",
+          "oklch(49.3% 0.005 258.3)",
+          "oklch(60.7% 0.005 258.3)",
+          "oklch(72.1% 0.005 258.3)",
+          "oklch(83.6% 0.005 258.3)",
+          "oklch(95.0% 0.005 258.3)"
+        ]
+      },
+      "surface-hover": {
+        "role": "neutral",
+        "displayName": "Hover Sheet",
+        "canonical": "#eef1f5",
+        "tonalRamp": [
+          "oklch(15.0% 0.006 255.5)",
+          "oklch(26.4% 0.006 255.5)",
+          "oklch(37.9% 0.006 255.5)",
+          "oklch(49.3% 0.006 255.5)",
+          "oklch(60.7% 0.006 255.5)",
+          "oklch(72.1% 0.006 255.5)",
+          "oklch(83.6% 0.006 255.5)",
+          "oklch(95.0% 0.006 255.5)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e3e6eb",
+        "tonalRamp": [
+          "oklch(15.0% 0.008 260.7)",
+          "oklch(26.4% 0.008 260.7)",
+          "oklch(37.9% 0.008 260.7)",
+          "oklch(49.3% 0.008 260.7)",
+          "oklch(60.7% 0.008 260.7)",
+          "oklch(72.1% 0.008 260.7)",
+          "oklch(83.6% 0.008 260.7)",
+          "oklch(95.0% 0.008 260.7)"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "#cdd2da",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 259.8)",
+          "oklch(26.4% 0.012 259.8)",
+          "oklch(37.9% 0.012 259.8)",
+          "oklch(49.3% 0.012 259.8)",
+          "oklch(60.7% 0.012 259.8)",
+          "oklch(72.1% 0.012 259.8)",
+          "oklch(83.6% 0.012 259.8)",
+          "oklch(95.0% 0.012 259.8)"
+        ]
+      },
+      "input-border": {
+        "role": "neutral",
+        "displayName": "Field Edge",
+        "canonical": "#858fa1",
+        "tonalRamp": [
+          "oklch(15.0% 0.029 262.3)",
+          "oklch(26.4% 0.029 262.3)",
+          "oklch(37.9% 0.029 262.3)",
+          "oklch(49.3% 0.029 262.3)",
+          "oklch(60.7% 0.029 262.3)",
+          "oklch(72.1% 0.029 262.3)",
+          "oklch(83.6% 0.029 262.3)",
+          "oklch(95.0% 0.024 262.3)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#101828",
+        "tonalRamp": [
+          "oklch(15.0% 0.034 263.4)",
+          "oklch(26.4% 0.034 263.4)",
+          "oklch(37.9% 0.034 263.4)",
+          "oklch(49.3% 0.034 263.4)",
+          "oklch(60.7% 0.034 263.4)",
+          "oklch(72.1% 0.034 263.4)",
+          "oklch(83.6% 0.034 263.4)",
+          "oklch(95.0% 0.024 263.4)"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#475467",
+        "tonalRamp": [
+          "oklch(15.0% 0.035 257.8)",
+          "oklch(26.4% 0.035 257.8)",
+          "oklch(37.9% 0.035 257.8)",
+          "oklch(49.3% 0.035 257.8)",
+          "oklch(60.7% 0.035 257.8)",
+          "oklch(72.1% 0.035 257.8)",
+          "oklch(83.6% 0.035 257.8)",
+          "oklch(95.0% 0.024 257.8)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "canonical": "#5f6b7d",
+        "tonalRamp": [
+          "oklch(15.0% 0.032 258.4)",
+          "oklch(26.4% 0.032 258.4)",
+          "oklch(37.9% 0.032 258.4)",
+          "oklch(49.3% 0.032 258.4)",
+          "oklch(60.7% 0.032 258.4)",
+          "oklch(72.1% 0.032 258.4)",
+          "oklch(83.6% 0.032 258.4)",
+          "oklch(95.0% 0.024 258.4)"
+        ]
+      },
+      "sidebar-bg": {
+        "role": "neutral",
+        "displayName": "Night Navy",
+        "canonical": "#101828",
+        "tonalRamp": [
+          "oklch(15.0% 0.034 263.4)",
+          "oklch(26.4% 0.034 263.4)",
+          "oklch(37.9% 0.034 263.4)",
+          "oklch(49.3% 0.034 263.4)",
+          "oklch(60.7% 0.034 263.4)",
+          "oklch(72.1% 0.034 263.4)",
+          "oklch(83.6% 0.034 263.4)",
+          "oklch(95.0% 0.024 263.4)"
+        ]
+      },
+      "sidebar-text": {
+        "role": "neutral",
+        "displayName": "Sidebar Text",
+        "canonical": "#d0d5dd",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 259.8)",
+          "oklch(26.4% 0.012 259.8)",
+          "oklch(37.9% 0.012 259.8)",
+          "oklch(49.3% 0.012 259.8)",
+          "oklch(60.7% 0.012 259.8)",
+          "oklch(72.1% 0.012 259.8)",
+          "oklch(83.6% 0.012 259.8)",
+          "oklch(95.0% 0.012 259.8)"
+        ]
+      },
+      "sidebar-text-strong": {
+        "role": "neutral",
+        "displayName": "Sidebar Text Strong",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.4% 0.000 89.9)",
+          "oklch(37.9% 0.000 89.9)",
+          "oklch(49.3% 0.000 89.9)",
+          "oklch(60.7% 0.000 89.9)",
+          "oklch(72.1% 0.000 89.9)",
+          "oklch(83.6% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "sidebar-hover": {
+        "role": "neutral",
+        "displayName": "Sidebar Hover",
+        "canonical": "#1d2939",
+        "tonalRamp": [
+          "oklch(15.0% 0.034 255.8)",
+          "oklch(26.4% 0.034 255.8)",
+          "oklch(37.9% 0.034 255.8)",
+          "oklch(49.3% 0.034 255.8)",
+          "oklch(60.7% 0.034 255.8)",
+          "oklch(72.1% 0.034 255.8)",
+          "oklch(83.6% 0.034 255.8)",
+          "oklch(95.0% 0.024 255.8)"
+        ]
+      },
+      "sidebar-active": {
+        "role": "neutral",
+        "displayName": "Sidebar Active",
+        "canonical": "#253247",
+        "tonalRamp": [
+          "oklch(15.0% 0.042 259.8)",
+          "oklch(26.4% 0.042 259.8)",
+          "oklch(37.9% 0.042 259.8)",
+          "oklch(49.3% 0.042 259.8)",
+          "oklch(60.7% 0.042 259.8)",
+          "oklch(72.1% 0.042 259.8)",
+          "oklch(83.6% 0.042 259.8)",
+          "oklch(95.0% 0.024 259.8)"
+        ]
+      },
+      "sidebar-muted": {
+        "role": "neutral",
+        "displayName": "Sidebar Muted",
+        "canonical": "#98a2b3",
+        "tonalRamp": [
+          "oklch(15.0% 0.027 261.1)",
+          "oklch(26.4% 0.027 261.1)",
+          "oklch(37.9% 0.027 261.1)",
+          "oklch(49.3% 0.027 261.1)",
+          "oklch(60.7% 0.027 261.1)",
+          "oklch(72.1% 0.027 261.1)",
+          "oklch(83.6% 0.027 261.1)",
+          "oklch(95.0% 0.024 261.1)"
+        ]
+      },
+      "sidebar-border": {
+        "role": "neutral",
+        "displayName": "Sidebar Divider",
+        "canonical": "#1f2a3b",
+        "tonalRamp": [
+          "oklch(15.0% 0.035 258.9)",
+          "oklch(26.4% 0.035 258.9)",
+          "oklch(37.9% 0.035 258.9)",
+          "oklch(49.3% 0.035 258.9)",
+          "oklch(60.7% 0.035 258.9)",
+          "oklch(72.1% 0.035 258.9)",
+          "oklch(83.6% 0.035 258.9)",
+          "oklch(95.0% 0.024 258.9)"
+        ]
+      },
+      "error": {
+        "role": "semantic",
+        "displayName": "Signal Red",
+        "canonical": "#d92d20",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 29.5)",
+          "oklch(26.4% 0.109 29.5)",
+          "oklch(37.9% 0.155 29.5)",
+          "oklch(49.3% 0.201 29.5)",
+          "oklch(60.7% 0.209 29.5)",
+          "oklch(72.1% 0.174 29.5)",
+          "oklch(83.6% 0.091 29.5)",
+          "oklch(95.0% 0.025 29.5)"
+        ]
+      },
+      "error-text": {
+        "role": "semantic",
+        "displayName": "Signal Red Text",
+        "canonical": "#b42318",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 29.5)",
+          "oklch(26.4% 0.108 29.5)",
+          "oklch(37.9% 0.154 29.5)",
+          "oklch(49.3% 0.182 29.5)",
+          "oklch(60.7% 0.182 29.5)",
+          "oklch(72.1% 0.174 29.5)",
+          "oklch(83.6% 0.091 29.5)",
+          "oklch(95.0% 0.025 29.5)"
+        ]
+      },
+      "error-soft": {
+        "role": "semantic",
+        "displayName": "Red Wash",
+        "canonical": "#fef3f2",
+        "tonalRamp": [
+          "oklch(15.0% 0.012 23.7)",
+          "oklch(26.4% 0.012 23.7)",
+          "oklch(37.9% 0.012 23.7)",
+          "oklch(49.3% 0.012 23.7)",
+          "oklch(60.7% 0.012 23.7)",
+          "oklch(72.1% 0.012 23.7)",
+          "oklch(83.6% 0.012 23.7)",
+          "oklch(95.0% 0.012 23.7)"
+        ]
+      },
+      "error-border": {
+        "role": "semantic",
+        "displayName": "Red Edge",
+        "canonical": "#fecdca",
+        "tonalRamp": [
+          "oklch(15.0% 0.056 22.3)",
+          "oklch(26.4% 0.056 22.3)",
+          "oklch(37.9% 0.056 22.3)",
+          "oklch(49.3% 0.056 22.3)",
+          "oklch(60.7% 0.056 22.3)",
+          "oklch(72.1% 0.056 22.3)",
+          "oklch(83.6% 0.056 22.3)",
+          "oklch(95.0% 0.025 22.3)"
+        ]
+      },
+      "danger-solid": {
+        "role": "semantic",
+        "displayName": "Danger Fill",
+        "canonical": "#d92d20",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 29.5)",
+          "oklch(26.4% 0.109 29.5)",
+          "oklch(37.9% 0.155 29.5)",
+          "oklch(49.3% 0.201 29.5)",
+          "oklch(60.7% 0.209 29.5)",
+          "oklch(72.1% 0.174 29.5)",
+          "oklch(83.6% 0.091 29.5)",
+          "oklch(95.0% 0.025 29.5)"
+        ]
+      },
+      "danger-solid-hover": {
+        "role": "semantic",
+        "displayName": "Danger Fill Hover",
+        "canonical": "#b42318",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 29.5)",
+          "oklch(26.4% 0.108 29.5)",
+          "oklch(37.9% 0.154 29.5)",
+          "oklch(49.3% 0.182 29.5)",
+          "oklch(60.7% 0.182 29.5)",
+          "oklch(72.1% 0.174 29.5)",
+          "oklch(83.6% 0.091 29.5)",
+          "oklch(95.0% 0.025 29.5)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Caution Amber",
+        "canonical": "#f79009",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 62.1)",
+          "oklch(26.4% 0.061 62.1)",
+          "oklch(37.9% 0.087 62.1)",
+          "oklch(49.3% 0.113 62.1)",
+          "oklch(60.7% 0.140 62.1)",
+          "oklch(72.1% 0.166 62.1)",
+          "oklch(83.6% 0.115 62.1)",
+          "oklch(95.0% 0.032 62.1)"
+        ]
+      },
+      "warning-text": {
+        "role": "semantic",
+        "displayName": "Caution Amber Text",
+        "canonical": "#a14a07",
+        "tonalRamp": [
+          "oklch(15.0% 0.042 49.3)",
+          "oklch(26.4% 0.071 49.3)",
+          "oklch(37.9% 0.101 49.3)",
+          "oklch(49.3% 0.132 49.3)",
+          "oklch(60.7% 0.134 49.3)",
+          "oklch(72.1% 0.134 49.3)",
+          "oklch(83.6% 0.100 49.3)",
+          "oklch(95.0% 0.028 49.3)"
+        ]
+      },
+      "warning-soft": {
+        "role": "semantic",
+        "displayName": "Amber Wash",
+        "canonical": "#fffaeb",
+        "tonalRamp": [
+          "oklch(15.0% 0.020 91.6)",
+          "oklch(26.4% 0.020 91.6)",
+          "oklch(37.9% 0.020 91.6)",
+          "oklch(49.3% 0.020 91.6)",
+          "oklch(60.7% 0.020 91.6)",
+          "oklch(72.1% 0.020 91.6)",
+          "oklch(83.6% 0.020 91.6)",
+          "oklch(95.0% 0.020 91.6)"
+        ]
+      },
+      "warning-border": {
+        "role": "semantic",
+        "displayName": "Amber Edge",
+        "canonical": "#fedf89",
+        "tonalRamp": [
+          "oklch(15.0% 0.032 90.3)",
+          "oklch(26.4% 0.054 90.3)",
+          "oklch(37.9% 0.078 90.3)",
+          "oklch(49.3% 0.101 90.3)",
+          "oklch(60.7% 0.111 90.3)",
+          "oklch(72.1% 0.111 90.3)",
+          "oklch(83.6% 0.111 90.3)",
+          "oklch(95.0% 0.064 90.3)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Clear Green",
+        "canonical": "#17b26a",
+        "tonalRamp": [
+          "oklch(15.0% 0.038 155.6)",
+          "oklch(26.4% 0.065 155.6)",
+          "oklch(37.9% 0.093 155.6)",
+          "oklch(49.3% 0.121 155.6)",
+          "oklch(60.7% 0.148 155.6)",
+          "oklch(72.1% 0.160 155.6)",
+          "oklch(83.6% 0.160 155.6)",
+          "oklch(95.0% 0.079 155.6)"
+        ]
+      },
+      "success-text": {
+        "role": "semantic",
+        "displayName": "Clear Green Text",
+        "canonical": "#067647",
+        "tonalRamp": [
+          "oklch(15.0% 0.037 157.1)",
+          "oklch(26.4% 0.063 157.1)",
+          "oklch(37.9% 0.090 157.1)",
+          "oklch(49.3% 0.117 157.1)",
+          "oklch(60.7% 0.117 157.1)",
+          "oklch(72.1% 0.117 157.1)",
+          "oklch(83.6% 0.117 157.1)",
+          "oklch(95.0% 0.078 157.1)"
+        ]
+      },
+      "success-soft": {
+        "role": "semantic",
+        "displayName": "Green Wash",
+        "canonical": "#ecfdf3",
+        "tonalRamp": [
+          "oklch(15.0% 0.022 160.2)",
+          "oklch(26.4% 0.022 160.2)",
+          "oklch(37.9% 0.022 160.2)",
+          "oklch(49.3% 0.022 160.2)",
+          "oklch(60.7% 0.022 160.2)",
+          "oklch(72.1% 0.022 160.2)",
+          "oklch(83.6% 0.022 160.2)",
+          "oklch(95.0% 0.022 160.2)"
+        ]
+      },
+      "success-border": {
+        "role": "semantic",
+        "displayName": "Green Edge",
+        "canonical": "#abefc6",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 157.6)",
+          "oklch(26.4% 0.063 157.6)",
+          "oklch(37.9% 0.089 157.6)",
+          "oklch(49.3% 0.089 157.6)",
+          "oklch(60.7% 0.089 157.6)",
+          "oklch(72.1% 0.089 157.6)",
+          "oklch(83.6% 0.089 157.6)",
+          "oklch(95.0% 0.078 157.6)"
+        ]
+      },
+      "neutral": {
+        "role": "semantic",
+        "displayName": "Quiet Slate",
+        "canonical": "#98a2b3",
+        "tonalRamp": [
+          "oklch(15.0% 0.027 261.1)",
+          "oklch(26.4% 0.027 261.1)",
+          "oklch(37.9% 0.027 261.1)",
+          "oklch(49.3% 0.027 261.1)",
+          "oklch(60.7% 0.027 261.1)",
+          "oklch(72.1% 0.027 261.1)",
+          "oklch(83.6% 0.027 261.1)",
+          "oklch(95.0% 0.024 261.1)"
+        ]
+      },
+      "neutral-text": {
+        "role": "semantic",
+        "displayName": "Quiet Slate Text",
+        "canonical": "#475467",
+        "tonalRamp": [
+          "oklch(15.0% 0.035 257.8)",
+          "oklch(26.4% 0.035 257.8)",
+          "oklch(37.9% 0.035 257.8)",
+          "oklch(49.3% 0.035 257.8)",
+          "oklch(60.7% 0.035 257.8)",
+          "oklch(72.1% 0.035 257.8)",
+          "oklch(83.6% 0.035 257.8)",
+          "oklch(95.0% 0.024 257.8)"
+        ]
+      },
+      "neutral-soft": {
+        "role": "semantic",
+        "displayName": "Slate Wash",
+        "canonical": "#f2f4f7",
+        "tonalRamp": [
+          "oklch(15.0% 0.005 258.3)",
+          "oklch(26.4% 0.005 258.3)",
+          "oklch(37.9% 0.005 258.3)",
+          "oklch(49.3% 0.005 258.3)",
+          "oklch(60.7% 0.005 258.3)",
+          "oklch(72.1% 0.005 258.3)",
+          "oklch(83.6% 0.005 258.3)",
+          "oklch(95.0% 0.005 258.3)"
+        ]
+      },
+      "neutral-border": {
+        "role": "semantic",
+        "displayName": "Slate Edge",
+        "canonical": "#e3e6eb",
+        "tonalRamp": [
+          "oklch(15.0% 0.008 260.7)",
+          "oklch(26.4% 0.008 260.7)",
+          "oklch(37.9% 0.008 260.7)",
+          "oklch(49.3% 0.008 260.7)",
+          "oklch(60.7% 0.008 260.7)",
+          "oklch(72.1% 0.008 260.7)",
+          "oklch(83.6% 0.008 260.7)",
+          "oklch(95.0% 0.008 260.7)"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "Operator Blue (dark)",
+        "canonical": "#2f64db",
+        "tonalRamp": [
+          "oklch(15.0% 0.086 263.3)",
+          "oklch(26.4% 0.140 263.3)",
+          "oklch(37.9% 0.191 263.3)",
+          "oklch(49.3% 0.191 263.3)",
+          "oklch(60.7% 0.191 263.3)",
+          "oklch(72.1% 0.144 263.3)",
+          "oklch(83.6% 0.081 263.3)",
+          "oklch(95.0% 0.024 263.3)"
+        ]
+      },
+      "accent-hover-dark": {
+        "role": "primary",
+        "displayName": "Operator Blue Hover (dark)",
+        "canonical": "#2856c2",
+        "tonalRamp": [
+          "oklch(15.0% 0.106 263.7)",
+          "oklch(26.4% 0.148 263.7)",
+          "oklch(37.9% 0.177 263.7)",
+          "oklch(49.3% 0.177 263.7)",
+          "oklch(60.7% 0.177 263.7)",
+          "oklch(72.1% 0.144 263.7)",
+          "oklch(83.6% 0.081 263.7)",
+          "oklch(95.0% 0.024 263.7)"
+        ]
+      },
+      "accent-text-dark": {
+        "role": "primary",
+        "displayName": "Link Blue (dark)",
+        "canonical": "#7aa5ff",
+        "tonalRamp": [
+          "oklch(15.0% 0.105 263.9)",
+          "oklch(26.4% 0.140 263.9)",
+          "oklch(37.9% 0.140 263.9)",
+          "oklch(49.3% 0.140 263.9)",
+          "oklch(60.7% 0.140 263.9)",
+          "oklch(72.1% 0.140 263.9)",
+          "oklch(83.6% 0.081 263.9)",
+          "oklch(95.0% 0.024 263.9)"
+        ]
+      },
+      "accent-soft-dark": {
+        "role": "primary",
+        "displayName": "Blue Wash (dark)",
+        "canonical": "#16213a",
+        "tonalRamp": [
+          "oklch(15.0% 0.050 265.0)",
+          "oklch(26.4% 0.050 265.0)",
+          "oklch(37.9% 0.050 265.0)",
+          "oklch(49.3% 0.050 265.0)",
+          "oklch(60.7% 0.050 265.0)",
+          "oklch(72.1% 0.050 265.0)",
+          "oklch(83.6% 0.050 265.0)",
+          "oklch(95.0% 0.024 265.0)"
+        ]
+      },
+      "accent-border-dark": {
+        "role": "primary",
+        "displayName": "Blue Edge (dark)",
+        "canonical": "#24386a",
+        "tonalRamp": [
+          "oklch(15.0% 0.091 265.6)",
+          "oklch(26.4% 0.091 265.6)",
+          "oklch(37.9% 0.091 265.6)",
+          "oklch(49.3% 0.091 265.6)",
+          "oklch(60.7% 0.091 265.6)",
+          "oklch(72.1% 0.091 265.6)",
+          "oklch(83.6% 0.081 265.6)",
+          "oklch(95.0% 0.024 265.6)"
+        ]
+      },
+      "focus-ring-dark": {
+        "role": "primary",
+        "displayName": "Focus Blue (dark)",
+        "canonical": "#7aa5ff",
+        "tonalRamp": [
+          "oklch(15.0% 0.105 263.9)",
+          "oklch(26.4% 0.140 263.9)",
+          "oklch(37.9% 0.140 263.9)",
+          "oklch(49.3% 0.140 263.9)",
+          "oklch(60.7% 0.140 263.9)",
+          "oklch(72.1% 0.140 263.9)",
+          "oklch(83.6% 0.081 263.9)",
+          "oklch(95.0% 0.024 263.9)"
+        ]
+      },
+      "selection-dark": {
+        "role": "primary",
+        "displayName": "Selection (dark)",
+        "canonical": "#24386a",
+        "tonalRamp": [
+          "oklch(15.0% 0.091 265.6)",
+          "oklch(26.4% 0.091 265.6)",
+          "oklch(37.9% 0.091 265.6)",
+          "oklch(49.3% 0.091 265.6)",
+          "oklch(60.7% 0.091 265.6)",
+          "oklch(72.1% 0.091 265.6)",
+          "oklch(83.6% 0.081 265.6)",
+          "oklch(95.0% 0.024 265.6)"
+        ]
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Cool Paper (dark)",
+        "canonical": "#0c0e12",
+        "tonalRamp": [
+          "oklch(15.0% 0.009 264.3)",
+          "oklch(26.4% 0.009 264.3)",
+          "oklch(37.9% 0.009 264.3)",
+          "oklch(49.3% 0.009 264.3)",
+          "oklch(60.7% 0.009 264.3)",
+          "oklch(72.1% 0.009 264.3)",
+          "oklch(83.6% 0.009 264.3)",
+          "oklch(95.0% 0.009 264.3)"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Sheet (dark)",
+        "canonical": "#13161c",
+        "tonalRamp": [
+          "oklch(15.0% 0.013 264.2)",
+          "oklch(26.4% 0.013 264.2)",
+          "oklch(37.9% 0.013 264.2)",
+          "oklch(49.3% 0.013 264.2)",
+          "oklch(60.7% 0.013 264.2)",
+          "oklch(72.1% 0.013 264.2)",
+          "oklch(83.6% 0.013 264.2)",
+          "oklch(95.0% 0.013 264.2)"
+        ]
+      },
+      "surface-subtle-dark": {
+        "role": "neutral",
+        "displayName": "Recessed Sheet (dark)",
+        "canonical": "#191d25",
+        "tonalRamp": [
+          "oklch(15.0% 0.017 264.2)",
+          "oklch(26.4% 0.017 264.2)",
+          "oklch(37.9% 0.017 264.2)",
+          "oklch(49.3% 0.017 264.2)",
+          "oklch(60.7% 0.017 264.2)",
+          "oklch(72.1% 0.017 264.2)",
+          "oklch(83.6% 0.017 264.2)",
+          "oklch(95.0% 0.017 264.2)"
+        ]
+      },
+      "surface-hover-dark": {
+        "role": "neutral",
+        "displayName": "Hover Sheet (dark)",
+        "canonical": "#1f2430",
+        "tonalRamp": [
+          "oklch(15.0% 0.024 267.1)",
+          "oklch(26.4% 0.024 267.1)",
+          "oklch(37.9% 0.024 267.1)",
+          "oklch(49.3% 0.024 267.1)",
+          "oklch(60.7% 0.024 267.1)",
+          "oklch(72.1% 0.024 267.1)",
+          "oklch(83.6% 0.024 267.1)",
+          "oklch(95.0% 0.024 267.1)"
+        ]
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "Hairline (dark)",
+        "canonical": "#262b36",
+        "tonalRamp": [
+          "oklch(15.0% 0.021 265.8)",
+          "oklch(26.4% 0.021 265.8)",
+          "oklch(37.9% 0.021 265.8)",
+          "oklch(49.3% 0.021 265.8)",
+          "oklch(60.7% 0.021 265.8)",
+          "oklch(72.1% 0.021 265.8)",
+          "oklch(83.6% 0.021 265.8)",
+          "oklch(95.0% 0.021 265.8)"
+        ]
+      },
+      "border-strong-dark": {
+        "role": "neutral",
+        "displayName": "Control Edge (dark)",
+        "canonical": "#363d4b",
+        "tonalRamp": [
+          "oklch(15.0% 0.026 264.2)",
+          "oklch(26.4% 0.026 264.2)",
+          "oklch(37.9% 0.026 264.2)",
+          "oklch(49.3% 0.026 264.2)",
+          "oklch(60.7% 0.026 264.2)",
+          "oklch(72.1% 0.026 264.2)",
+          "oklch(83.6% 0.026 264.2)",
+          "oklch(95.0% 0.024 264.2)"
+        ]
+      },
+      "input-border-dark": {
+        "role": "neutral",
+        "displayName": "Field Edge (dark)",
+        "canonical": "#5f687a",
+        "tonalRamp": [
+          "oklch(15.0% 0.031 264.3)",
+          "oklch(26.4% 0.031 264.3)",
+          "oklch(37.9% 0.031 264.3)",
+          "oklch(49.3% 0.031 264.3)",
+          "oklch(60.7% 0.031 264.3)",
+          "oklch(72.1% 0.031 264.3)",
+          "oklch(83.6% 0.031 264.3)",
+          "oklch(95.0% 0.024 264.3)"
+        ]
+      },
+      "text-dark": {
+        "role": "neutral",
+        "displayName": "Ink (dark)",
+        "canonical": "#f2f4f7",
+        "tonalRamp": [
+          "oklch(15.0% 0.005 258.3)",
+          "oklch(26.4% 0.005 258.3)",
+          "oklch(37.9% 0.005 258.3)",
+          "oklch(49.3% 0.005 258.3)",
+          "oklch(60.7% 0.005 258.3)",
+          "oklch(72.1% 0.005 258.3)",
+          "oklch(83.6% 0.005 258.3)",
+          "oklch(95.0% 0.005 258.3)"
+        ]
+      },
+      "text-secondary-dark": {
+        "role": "neutral",
+        "displayName": "Slate (dark)",
+        "canonical": "#b8c0cc",
+        "tonalRamp": [
+          "oklch(15.0% 0.019 258.4)",
+          "oklch(26.4% 0.019 258.4)",
+          "oklch(37.9% 0.019 258.4)",
+          "oklch(49.3% 0.019 258.4)",
+          "oklch(60.7% 0.019 258.4)",
+          "oklch(72.1% 0.019 258.4)",
+          "oklch(83.6% 0.019 258.4)",
+          "oklch(95.0% 0.019 258.4)"
+        ]
+      },
+      "text-muted-dark": {
+        "role": "neutral",
+        "displayName": "Muted Slate (dark)",
+        "canonical": "#949eae",
+        "tonalRamp": [
+          "oklch(15.0% 0.026 259.8)",
+          "oklch(26.4% 0.026 259.8)",
+          "oklch(37.9% 0.026 259.8)",
+          "oklch(49.3% 0.026 259.8)",
+          "oklch(60.7% 0.026 259.8)",
+          "oklch(72.1% 0.026 259.8)",
+          "oklch(83.6% 0.026 259.8)",
+          "oklch(95.0% 0.024 259.8)"
+        ]
+      },
+      "sidebar-bg-dark": {
+        "role": "neutral",
+        "displayName": "Night Navy (dark)",
+        "canonical": "#080a0d",
+        "tonalRamp": [
+          "oklch(15.0% 0.007 256.9)",
+          "oklch(26.4% 0.007 256.9)",
+          "oklch(37.9% 0.007 256.9)",
+          "oklch(49.3% 0.007 256.9)",
+          "oklch(60.7% 0.007 256.9)",
+          "oklch(72.1% 0.007 256.9)",
+          "oklch(83.6% 0.007 256.9)",
+          "oklch(95.0% 0.007 256.9)"
+        ]
+      },
+      "sidebar-text-dark": {
+        "role": "neutral",
+        "displayName": "Sidebar Text (dark)",
+        "canonical": "#c2c9d4",
+        "tonalRamp": [
+          "oklch(15.0% 0.017 259.4)",
+          "oklch(26.4% 0.017 259.4)",
+          "oklch(37.9% 0.017 259.4)",
+          "oklch(49.3% 0.017 259.4)",
+          "oklch(60.7% 0.017 259.4)",
+          "oklch(72.1% 0.017 259.4)",
+          "oklch(83.6% 0.017 259.4)",
+          "oklch(95.0% 0.017 259.4)"
+        ]
+      },
+      "sidebar-hover-dark": {
+        "role": "neutral",
+        "displayName": "Sidebar Hover (dark)",
+        "canonical": "#151922",
+        "tonalRamp": [
+          "oklch(15.0% 0.019 266.1)",
+          "oklch(26.4% 0.019 266.1)",
+          "oklch(37.9% 0.019 266.1)",
+          "oklch(49.3% 0.019 266.1)",
+          "oklch(60.7% 0.019 266.1)",
+          "oklch(72.1% 0.019 266.1)",
+          "oklch(83.6% 0.019 266.1)",
+          "oklch(95.0% 0.019 266.1)"
+        ]
+      },
+      "sidebar-active-dark": {
+        "role": "neutral",
+        "displayName": "Sidebar Active (dark)",
+        "canonical": "#1d2330",
+        "tonalRamp": [
+          "oklch(15.0% 0.026 265.3)",
+          "oklch(26.4% 0.026 265.3)",
+          "oklch(37.9% 0.026 265.3)",
+          "oklch(49.3% 0.026 265.3)",
+          "oklch(60.7% 0.026 265.3)",
+          "oklch(72.1% 0.026 265.3)",
+          "oklch(83.6% 0.026 265.3)",
+          "oklch(95.0% 0.024 265.3)"
+        ]
+      },
+      "sidebar-muted-dark": {
+        "role": "neutral",
+        "displayName": "Sidebar Muted (dark)",
+        "canonical": "#8e98a8",
+        "tonalRamp": [
+          "oklch(15.0% 0.026 259.8)",
+          "oklch(26.4% 0.026 259.8)",
+          "oklch(37.9% 0.026 259.8)",
+          "oklch(49.3% 0.026 259.8)",
+          "oklch(60.7% 0.026 259.8)",
+          "oklch(72.1% 0.026 259.8)",
+          "oklch(83.6% 0.026 259.8)",
+          "oklch(95.0% 0.024 259.8)"
+        ]
+      },
+      "sidebar-border-dark": {
+        "role": "neutral",
+        "displayName": "Sidebar Divider (dark)",
+        "canonical": "#1a1f29",
+        "tonalRamp": [
+          "oklch(15.0% 0.021 264.1)",
+          "oklch(26.4% 0.021 264.1)",
+          "oklch(37.9% 0.021 264.1)",
+          "oklch(49.3% 0.021 264.1)",
+          "oklch(60.7% 0.021 264.1)",
+          "oklch(72.1% 0.021 264.1)",
+          "oklch(83.6% 0.021 264.1)",
+          "oklch(95.0% 0.021 264.1)"
+        ]
+      },
+      "error-dark": {
+        "role": "semantic",
+        "displayName": "Signal Red (dark)",
+        "canonical": "#f04438",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 28.5)",
+          "oklch(26.4% 0.109 28.5)",
+          "oklch(37.9% 0.155 28.5)",
+          "oklch(49.3% 0.202 28.5)",
+          "oklch(60.7% 0.210 28.5)",
+          "oklch(72.1% 0.173 28.5)",
+          "oklch(83.6% 0.091 28.5)",
+          "oklch(95.0% 0.025 28.5)"
+        ]
+      },
+      "error-text-dark": {
+        "role": "semantic",
+        "displayName": "Signal Red Text (dark)",
+        "canonical": "#ff9c8f",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 28.1)",
+          "oklch(26.4% 0.109 28.1)",
+          "oklch(37.9% 0.121 28.1)",
+          "oklch(49.3% 0.121 28.1)",
+          "oklch(60.7% 0.121 28.1)",
+          "oklch(72.1% 0.121 28.1)",
+          "oklch(83.6% 0.091 28.1)",
+          "oklch(95.0% 0.025 28.1)"
+        ]
+      },
+      "error-soft-dark": {
+        "role": "semantic",
+        "displayName": "Red Wash (dark)",
+        "canonical": "#2a1414",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 20.4)",
+          "oklch(26.4% 0.036 20.4)",
+          "oklch(37.9% 0.036 20.4)",
+          "oklch(49.3% 0.036 20.4)",
+          "oklch(60.7% 0.036 20.4)",
+          "oklch(72.1% 0.036 20.4)",
+          "oklch(83.6% 0.036 20.4)",
+          "oklch(95.0% 0.025 20.4)"
+        ]
+      },
+      "error-border-dark": {
+        "role": "semantic",
+        "displayName": "Red Edge (dark)",
+        "canonical": "#5c2420",
+        "tonalRamp": [
+          "oklch(15.0% 0.063 26.5)",
+          "oklch(26.4% 0.083 26.5)",
+          "oklch(37.9% 0.083 26.5)",
+          "oklch(49.3% 0.083 26.5)",
+          "oklch(60.7% 0.083 26.5)",
+          "oklch(72.1% 0.083 26.5)",
+          "oklch(83.6% 0.083 26.5)",
+          "oklch(95.0% 0.025 26.5)"
+        ]
+      },
+      "warning-text-dark": {
+        "role": "semantic",
+        "displayName": "Caution Amber Text (dark)",
+        "canonical": "#fdc35c",
+        "tonalRamp": [
+          "oklch(15.0% 0.032 79.4)",
+          "oklch(26.4% 0.055 79.4)",
+          "oklch(37.9% 0.079 79.4)",
+          "oklch(49.3% 0.102 79.4)",
+          "oklch(60.7% 0.126 79.4)",
+          "oklch(72.1% 0.136 79.4)",
+          "oklch(83.6% 0.136 79.4)",
+          "oklch(95.0% 0.045 79.4)"
+        ]
+      },
+      "warning-soft-dark": {
+        "role": "semantic",
+        "displayName": "Amber Wash (dark)",
+        "canonical": "#2a1f0d",
+        "tonalRamp": [
+          "oklch(15.0% 0.033 78.4)",
+          "oklch(26.4% 0.034 78.4)",
+          "oklch(37.9% 0.034 78.4)",
+          "oklch(49.3% 0.034 78.4)",
+          "oklch(60.7% 0.034 78.4)",
+          "oklch(72.1% 0.034 78.4)",
+          "oklch(83.6% 0.034 78.4)",
+          "oklch(95.0% 0.034 78.4)"
+        ]
+      },
+      "warning-border-dark": {
+        "role": "semantic",
+        "displayName": "Amber Edge (dark)",
+        "canonical": "#5a4012",
+        "tonalRamp": [
+          "oklch(15.0% 0.033 77.8)",
+          "oklch(26.4% 0.056 77.8)",
+          "oklch(37.9% 0.070 77.8)",
+          "oklch(49.3% 0.070 77.8)",
+          "oklch(60.7% 0.070 77.8)",
+          "oklch(72.1% 0.070 77.8)",
+          "oklch(83.6% 0.070 77.8)",
+          "oklch(95.0% 0.043 77.8)"
+        ]
+      },
+      "success-text-dark": {
+        "role": "semantic",
+        "displayName": "Clear Green Text (dark)",
+        "canonical": "#6ce0a3",
+        "tonalRamp": [
+          "oklch(15.0% 0.036 158.3)",
+          "oklch(26.4% 0.062 158.3)",
+          "oklch(37.9% 0.088 158.3)",
+          "oklch(49.3% 0.115 158.3)",
+          "oklch(60.7% 0.138 158.3)",
+          "oklch(72.1% 0.138 158.3)",
+          "oklch(83.6% 0.138 158.3)",
+          "oklch(95.0% 0.077 158.3)"
+        ]
+      },
+      "success-soft-dark": {
+        "role": "semantic",
+        "displayName": "Green Wash (dark)",
+        "canonical": "#0f2419",
+        "tonalRamp": [
+          "oklch(15.0% 0.035 159.3)",
+          "oklch(26.4% 0.035 159.3)",
+          "oklch(37.9% 0.035 159.3)",
+          "oklch(49.3% 0.035 159.3)",
+          "oklch(60.7% 0.035 159.3)",
+          "oklch(72.1% 0.035 159.3)",
+          "oklch(83.6% 0.035 159.3)",
+          "oklch(95.0% 0.035 159.3)"
+        ]
+      },
+      "success-border-dark": {
+        "role": "semantic",
+        "displayName": "Green Edge (dark)",
+        "canonical": "#1d4d33",
+        "tonalRamp": [
+          "oklch(15.0% 0.037 157.0)",
+          "oklch(26.4% 0.063 157.0)",
+          "oklch(37.9% 0.069 157.0)",
+          "oklch(49.3% 0.069 157.0)",
+          "oklch(60.7% 0.069 157.0)",
+          "oklch(72.1% 0.069 157.0)",
+          "oklch(83.6% 0.069 157.0)",
+          "oklch(95.0% 0.069 157.0)"
+        ]
+      },
+      "neutral-dark": {
+        "role": "semantic",
+        "displayName": "Quiet Slate (dark)",
+        "canonical": "#667085",
+        "tonalRamp": [
+          "oklch(15.0% 0.035 265.1)",
+          "oklch(26.4% 0.035 265.1)",
+          "oklch(37.9% 0.035 265.1)",
+          "oklch(49.3% 0.035 265.1)",
+          "oklch(60.7% 0.035 265.1)",
+          "oklch(72.1% 0.035 265.1)",
+          "oklch(83.6% 0.035 265.1)",
+          "oklch(95.0% 0.024 265.1)"
+        ]
+      },
+      "neutral-text-dark": {
+        "role": "semantic",
+        "displayName": "Quiet Slate Text (dark)",
+        "canonical": "#b8c0cc",
+        "tonalRamp": [
+          "oklch(15.0% 0.019 258.4)",
+          "oklch(26.4% 0.019 258.4)",
+          "oklch(37.9% 0.019 258.4)",
+          "oklch(49.3% 0.019 258.4)",
+          "oklch(60.7% 0.019 258.4)",
+          "oklch(72.1% 0.019 258.4)",
+          "oklch(83.6% 0.019 258.4)",
+          "oklch(95.0% 0.019 258.4)"
+        ]
+      },
+      "neutral-soft-dark": {
+        "role": "semantic",
+        "displayName": "Slate Wash (dark)",
+        "canonical": "#1c212a",
+        "tonalRamp": [
+          "oklch(15.0% 0.019 262.1)",
+          "oklch(26.4% 0.019 262.1)",
+          "oklch(37.9% 0.019 262.1)",
+          "oklch(49.3% 0.019 262.1)",
+          "oklch(60.7% 0.019 262.1)",
+          "oklch(72.1% 0.019 262.1)",
+          "oklch(83.6% 0.019 262.1)",
+          "oklch(95.0% 0.019 262.1)"
+        ]
+      },
+      "neutral-border-dark": {
+        "role": "semantic",
+        "displayName": "Slate Edge (dark)",
+        "canonical": "#2d3340",
+        "tonalRamp": [
+          "oklch(15.0% 0.025 265.6)",
+          "oklch(26.4% 0.025 265.6)",
+          "oklch(37.9% 0.025 265.6)",
+          "oklch(49.3% 0.025 265.6)",
+          "oklch(60.7% 0.025 265.6)",
+          "oklch(72.1% 0.025 265.6)",
+          "oklch(83.6% 0.025 265.6)",
+          "oklch(95.0% 0.024 265.6)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Error and warning counts in the verdict strip; 1.5rem below 720px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The page h1, one per screen, with balanced wrapping."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section h2s and the sidebar wordmark."
+      },
+      "title-sm": {
+        "displayName": "Title small",
+        "purpose": "Panel and empty-state h3s."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text and table cells."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Hints, breadcrumbs, hosts, metadata lines, small buttons, URL lists."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Button, tab, filter and navigation labels."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Table headers, badges, stage names, tab counts, statistic captions."
+      },
+      "tag": {
+        "displayName": "Tag",
+        "purpose": "The New marker on issue groups and occurrences only."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "URLs, crawl patterns, selectors, source locations and code only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "popover",
+        "value": "0 8px 24px -6px rgb(16 24 40 / 0.18), 0 2px 6px -2px rgb(16 24 40 / 0.08)",
+        "purpose": "Elements floating above content: URL combobox list, sticky unsaved-changes bar, skip link."
+      },
+      {
+        "name": "popover-dark",
+        "value": "0 8px 24px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4)",
+        "purpose": "The popover shadow under prefers-color-scheme: dark."
+      },
+      {
+        "name": "segment-ring",
+        "value": "0 0 0 1px var(--border)",
+        "purpose": "The pressed button inside a segmented control, in both themes."
+      },
+      {
+        "name": "input-focus-halo",
+        "value": "0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent)",
+        "purpose": "Focused text inputs, selects and textareas (replaces the outline)."
+      },
+      {
+        "name": "pressed-ring",
+        "value": "0 0 0 2px var(--accent)",
+        "purpose": "The +N new change chip while it filters the report."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The single curve for entrances, fills, press feedback and view transitions."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "The indeterminate stage sweep loop."
+      },
+      {
+        "name": "ease",
+        "value": "ease",
+        "purpose": "Hover colour changes and exits."
+      },
+      {
+        "name": "motion-distance",
+        "value": "6px",
+        "purpose": "Rise distance for entrances (doubled for the rise transition); 0px under reduced motion."
+      },
+      {
+        "name": "duration-press",
+        "value": "100ms",
+        "purpose": "Button press nudge (translateY 0.5px)."
+      },
+      {
+        "name": "duration-hover",
+        "value": "150ms",
+        "purpose": "Hover, border and background colour on controls; disclosure chevron rotation."
+      },
+      {
+        "name": "duration-view-transition",
+        "value": "160ms",
+        "purpose": "Root cross-fade between pages; the sidebar holds still via its own view-transition-name. Progress panel fade-out (settle)."
+      },
+      {
+        "name": "duration-tab-panel",
+        "value": "180ms",
+        "purpose": "Tab panel fade-and-rise on switch."
+      },
+      {
+        "name": "duration-enter",
+        "value": "220ms",
+        "purpose": "Dismissible alerts and the unsaved-changes bar rising in."
+      },
+      {
+        "name": "duration-exit",
+        "value": "140ms",
+        "purpose": "The unsaved-changes bar leaving."
+      },
+      {
+        "name": "duration-disclosure",
+        "value": "240ms",
+        "purpose": "Disclosure height open/close where interpolate-size is supported."
+      },
+      {
+        "name": "duration-status-colour",
+        "value": "300ms",
+        "purpose": "Badge tone and stage-label colour changes, so a status flip reads as a change."
+      },
+      {
+        "name": "duration-verdict-arrival",
+        "value": "420ms",
+        "purpose": "Finish moment: verdict strip columns rise in, staggered 0/60/120ms."
+      },
+      {
+        "name": "stagger-step",
+        "value": "60ms",
+        "purpose": "Stagger between verdict columns and between tweened verdict counts (0-240ms)."
+      },
+      {
+        "name": "tween-default",
+        "value": "500ms",
+        "purpose": "TweenNumber default duration; quartic ease-out, 1 - (1 - p)^4."
+      },
+      {
+        "name": "tween-verdict",
+        "value": "700ms",
+        "purpose": "Verdict strip counts and change chips counting to their value."
+      },
+      {
+        "name": "tween-live",
+        "value": "900ms",
+        "purpose": "Live progress statistics (pages crawled, queued, links checked, issues so far)."
+      },
+      {
+        "name": "duration-stage-fill",
+        "value": "600ms",
+        "purpose": "Stage-track fill settling (scaleX) as stages complete or crawl progress advances."
+      },
+      {
+        "name": "duration-stage-sweep",
+        "value": "1500ms",
+        "purpose": "Indeterminate stage highlight sweep, infinite."
+      },
+      {
+        "name": "duration-row-flash",
+        "value": "1600ms",
+        "purpose": "Dashboard row whose status changed fades from the blue wash to normal."
+      },
+      {
+        "name": "duration-spin",
+        "value": "900ms",
+        "purpose": "Loader spinner rotation, linear; 1800ms under reduced motion."
+      },
+      {
+        "name": "duration-shimmer",
+        "value": "1400ms",
+        "purpose": "Skeleton shimmer, ease-in-out, infinite."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Travel drops to 0px so rises become fades; stage fills and disclosure heights snap; the sweep becomes a static bar at 60% opacity; spinner slows to 1800ms; staggers collapse; counters jump to their value."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "columns-collapse",
+        "value": "1080px"
+      },
+      {
+        "name": "sidebar-to-topbar",
+        "value": "900px"
+      },
+      {
+        "name": "tables-reflow",
+        "value": "720px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action per view, in the page header or the form it submits.",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Add website</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--accent, #2563eb); border-radius: var(--radius, 8px); background: var(--accent, #2563eb); color: var(--on-accent, #ffffff); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease, transform 100ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); } .ds-btn-primary svg { display: block; } .ds-btn-primary:hover { background: var(--accent-hover, #1d4ed8); border-color: var(--accent-hover, #1d4ed8); } .ds-btn-primary:active { transform: translateY(0.5px); } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default bordered button for every non-primary action.",
+      "html": "<button type=\"button\" class=\"ds-btn-secondary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M20 7h-9\"/><path d=\"M14 17H5\"/><circle cx=\"17\" cy=\"17\" r=\"3\"/><circle cx=\"7\" cy=\"7\" r=\"3\"/></svg>Crawl settings</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--border-strong, #cdd2da); border-radius: var(--radius, 8px); background: var(--surface, #ffffff); color: var(--text, #101828); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 100ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); } .ds-btn-secondary svg { display: block; } .ds-btn-secondary:hover { background: var(--surface-hover, #eef1f5); } .ds-btn-secondary:active { transform: translateY(0.5px); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Label above, 36px input, hint below; focus swaps the outline for a blue halo.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-url\">Website URL</label><input class=\"ds-input\" id=\"ds-url\" type=\"url\" placeholder=\"https://example.com\" aria-describedby=\"ds-url-hint\"><span class=\"ds-field-hint\" id=\"ds-url-hint\">The homepage to start from. Each host can only be added once.</span></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; max-width: 360px; font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); } .ds-field-label { font-size: 0.8125rem; font-weight: 500; color: var(--text, #101828); } .ds-input { width: 100%; min-height: 36px; padding: 0 12px; border: 1px solid var(--input-border, #858fa1); border-radius: var(--radius, 8px); background: var(--surface, #ffffff); color: var(--text, #101828); font: inherit; font-size: 0.875rem; transition: border-color 150ms ease, box-shadow 150ms ease; } .ds-input::placeholder { color: var(--text-muted, #5f6b7d); } .ds-input:hover:not(:focus) { border-color: var(--text-muted, #5f6b7d); } .ds-input:focus-visible { outline: none; border-color: var(--accent, #2563eb); box-shadow: 0 0 0 3px var(--accent-soft, #eef4ff), 0 0 0 1px var(--accent, #2563eb); } .ds-input[aria-invalid=\"true\"] { border-color: var(--error, #d92d20); } .ds-field-hint { font-size: 0.8125rem; color: var(--text-muted, #5f6b7d); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "A pill in a semantic set with a dot (or spinner while running) and a plain-language label from the shared vocabulary.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge\" data-tone=\"accent\"><svg class=\"ds-badge-spin\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"/></svg>Running</span><span class=\"ds-badge\" data-tone=\"error\"><span class=\"ds-badge-dot\"></span>Errors</span><span class=\"ds-badge\" data-tone=\"warning\"><span class=\"ds-badge-dot\"></span>Warnings</span><span class=\"ds-badge\" data-tone=\"success\"><span class=\"ds-badge-dot\"></span>Clean</span><span class=\"ds-badge\" data-tone=\"neutral\"><span class=\"ds-badge-dot\"></span>Not audited</span><span class=\"ds-badge\" data-tone=\"warning\"><span class=\"ds-badge-dot\"></span>Completed, limit reached</span></div>",
+      "css": ".ds-badges { display: flex; flex-wrap: wrap; gap: 8px; } .ds-badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border: 1px solid var(--neutral-border, #e3e6eb); border-radius: 999px; background: var(--neutral-soft, #f2f4f7); color: var(--neutral-text, #475467); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.75rem; font-weight: 500; line-height: 1; white-space: nowrap; transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease; } .ds-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; } .ds-badge[data-tone=\"error\"] { border-color: var(--error-border, #fecdca); background: var(--error-soft, #fef3f2); color: var(--error-text, #b42318); } .ds-badge[data-tone=\"warning\"] { border-color: var(--warning-border, #fedf89); background: var(--warning-soft, #fffaeb); color: var(--warning-text, #a14a07); } .ds-badge[data-tone=\"success\"] { border-color: var(--success-border, #abefc6); background: var(--success-soft, #ecfdf3); color: var(--success-text, #067647); } .ds-badge[data-tone=\"accent\"] { border-color: var(--accent-border, #c7d7fe); background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); } .ds-badge-spin { display: block; animation: ds-spin 900ms linear infinite; } @keyframes ds-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-badge-spin { animation-duration: 1800ms; } }"
+    },
+    {
+      "name": "Summary Filter Chips",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "The dashboard's status filter row: severity dot, label and bold tabular count; pressed takes the blue wash.",
+      "html": "<div class=\"ds-filter-group\" role=\"group\" aria-label=\"Filter by status\"><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"true\">All <span class=\"ds-filter-count\">14</span></button><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"false\"><span class=\"ds-filter-dot ds-dot-error\"></span>Errors <span class=\"ds-filter-count\">3</span></button><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"false\"><span class=\"ds-filter-dot ds-dot-warning\"></span>Warnings <span class=\"ds-filter-count\">5</span></button><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"false\"><span class=\"ds-filter-dot ds-dot-accent\"></span>Running <span class=\"ds-filter-count\">1</span></button><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"false\"><span class=\"ds-filter-dot ds-dot-neutral\"></span>Not audited <span class=\"ds-filter-count\">1</span></button><button type=\"button\" class=\"ds-filter-chip\" aria-pressed=\"false\"><span class=\"ds-filter-dot ds-dot-success\"></span>Clean <span class=\"ds-filter-count\">4</span></button></div>",
+      "css": ".ds-filter-group { display: flex; flex-wrap: wrap; gap: 8px; } .ds-filter-chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--border, #e3e6eb); border-radius: var(--radius, 8px); background: var(--surface, #ffffff); color: var(--text-secondary, #475467); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; } .ds-filter-chip:hover { border-color: var(--border-strong, #cdd2da); color: var(--text, #101828); } .ds-filter-chip[aria-pressed=\"true\"] { border-color: var(--accent, #2563eb); background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); } .ds-filter-chip:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-filter-count { color: var(--text, #101828); font-weight: 600; font-variant-numeric: tabular-nums; } .ds-filter-chip[aria-pressed=\"true\"] .ds-filter-count { color: var(--accent-text, #1d4ed8); } .ds-filter-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; } .ds-dot-error { color: var(--error, #d92d20); } .ds-dot-warning { color: var(--warning, #f79009); } .ds-dot-success { color: var(--success, #17b26a); } .ds-dot-neutral { color: var(--neutral, #98a2b3); } .ds-dot-accent { color: var(--accent, #2563eb); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Fixed 232px Night Navy sidebar in both themes: wordmark, section links, account and sign out at the foot.",
+      "html": "<aside class=\"ds-sidebar\"><a class=\"ds-sidebar-brand\" href=\"#\"><span class=\"ds-brand-mark\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7V5a2 2 0 0 1 2-2h2\"/><path d=\"M17 3h2a2 2 0 0 1 2 2v2\"/><path d=\"M21 17v2a2 2 0 0 1-2 2h-2\"/><path d=\"M7 21H5a2 2 0 0 1-2-2v-2\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"m16 16-1.9-1.9\"/></svg></span>Website Auditor</a><nav class=\"ds-sidebar-nav\" aria-label=\"Main\"><a class=\"ds-sidebar-link\" href=\"#\" aria-current=\"page\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20\"/><path d=\"M2 12h20\"/></svg>Websites</a><a class=\"ds-sidebar-link\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Add website</a><a class=\"ds-sidebar-link\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/></svg>Users</a></nav><div class=\"ds-sidebar-footer\"><div class=\"ds-sidebar-user\"><strong>admin</strong><span>Administrator</span></div><button type=\"button\" class=\"ds-sidebar-link\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4\"/><path d=\"m16 17 5-5-5-5\"/><path d=\"M21 12H9\"/></svg>Sign out</button></div></aside>",
+      "css": ".ds-sidebar { display: flex; flex-direction: column; gap: 24px; width: 232px; min-height: 420px; padding: 20px 12px; background: var(--sidebar-bg, #101828); color: var(--sidebar-text, #d0d5dd); border-right: 1px solid var(--sidebar-border, #1f2a3b); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; } .ds-sidebar svg { display: block; } .ds-sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 0 8px; color: var(--sidebar-text-strong, #ffffff); font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; text-decoration: none; } .ds-brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius, 8px); background: var(--accent, #2563eb); color: var(--on-accent, #ffffff); flex-shrink: 0; } .ds-sidebar-nav { display: flex; flex-direction: column; gap: 2px; } .ds-sidebar-link { display: flex; align-items: center; gap: 12px; width: 100%; height: 36px; padding: 0 8px; border: 0; border-radius: var(--radius, 8px); background: transparent; color: var(--sidebar-text, #d0d5dd); font: inherit; font-weight: 500; text-align: left; text-decoration: none; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; } .ds-sidebar-link svg { color: var(--sidebar-muted, #98a2b3); } .ds-sidebar-link:hover { background: var(--sidebar-hover, #1d2939); color: var(--sidebar-text-strong, #ffffff); } .ds-sidebar-link[aria-current=\"page\"] { background: var(--sidebar-active, #253247); color: var(--sidebar-text-strong, #ffffff); } .ds-sidebar-link:hover svg, .ds-sidebar-link[aria-current=\"page\"] svg { color: var(--sidebar-text-strong, #ffffff); } .ds-sidebar-link:focus-visible, .ds-sidebar-brand:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: 16px; border-top: 1px solid var(--sidebar-border, #1f2a3b); } .ds-sidebar-user { display: flex; flex-direction: column; padding: 4px 8px 8px; line-height: 1.3; } .ds-sidebar-user strong { color: var(--sidebar-text-strong, #ffffff); font-weight: 500; } .ds-sidebar-user span { color: var(--sidebar-muted, #98a2b3); font-size: 0.75rem; }"
+    },
+    {
+      "name": "Sites Table",
+      "kind": "custom",
+      "refersTo": "table-header",
+      "description": "The dashboard's sortable portfolio table: name over host, status badge, tabular severity counts, change since the last run, relative last audit, row actions. A row whose status just changed flashes the blue wash.",
+      "html": "<div class=\"ds-table-panel\"><table class=\"ds-table\"><thead><tr><th scope=\"col\"><button type=\"button\" class=\"ds-sort\">Website<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/></svg></button></th><th scope=\"col\"><button type=\"button\" class=\"ds-sort\">Status<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/></svg></button></th><th scope=\"col\" class=\"ds-end\" aria-sort=\"descending\"><button type=\"button\" class=\"ds-sort\">Errors<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/></svg></button></th><th scope=\"col\" class=\"ds-end\"><button type=\"button\" class=\"ds-sort\">Warnings<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/></svg></button></th><th scope=\"col\" class=\"ds-end\"><button type=\"button\" class=\"ds-sort\">Change<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/></svg></button></th><th scope=\"col\"><button type=\"button\" class=\"ds-sort\">Last audit<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m7 15 5 5 5-5\"/><path d=\"m7 9 5-5 5 5\"/></svg></button></th><th scope=\"col\" class=\"ds-shrink\"><span class=\"ds-sr\">Actions</span></th></tr></thead><tbody><tr class=\"ds-row-updated\"><td><div class=\"ds-cell-primary\"><a href=\"#\">Example site</a><span>example.org</span></div></td><td><span class=\"ds-tbadge\" data-tone=\"error\"><span class=\"ds-tbadge-dot\"></span>Errors</span></td><td class=\"ds-end\"><span class=\"ds-count-error\">4</span></td><td class=\"ds-end\"><span class=\"ds-count-warning\">12</span></td><td class=\"ds-end\"><span class=\"ds-delta\" data-tone=\"worse\" title=\"3 issues more than the previous audit\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg>+3</span></td><td><span class=\"ds-when\">2 hours ago</span></td><td class=\"ds-shrink\"><div class=\"ds-row-actions\"><button type=\"button\" class=\"ds-btn-sm\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 3 14 9-14 9z\"/></svg>Run</button><button type=\"button\" class=\"ds-btn-ghost-icon\" aria-label=\"Archive\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"5\" rx=\"1\"/><path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/><path d=\"M10 12h4\"/></svg></button></div></td></tr><tr><td><div class=\"ds-cell-primary\"><a href=\"#\">Example docs</a><span>docs.example.org</span></div></td><td><span class=\"ds-tbadge\" data-tone=\"success\"><span class=\"ds-tbadge-dot\"></span>Clean</span></td><td class=\"ds-end\"><span class=\"ds-count-zero\">0</span></td><td class=\"ds-end\"><span class=\"ds-count-zero\">0</span></td><td class=\"ds-end\"><span class=\"ds-delta\" data-tone=\"better\" title=\"2 issues fewer than the previous audit\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/></svg>&minus;2</span></td><td><span class=\"ds-when\">yesterday</span></td><td class=\"ds-shrink\"><div class=\"ds-row-actions\"><button type=\"button\" class=\"ds-btn-sm\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 3 14 9-14 9z\"/></svg>Run</button><button type=\"button\" class=\"ds-btn-ghost-icon\" aria-label=\"Archive\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"5\" rx=\"1\"/><path d=\"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8\"/><path d=\"M10 12h4\"/></svg></button></div></td></tr></tbody></table></div>",
+      "css": ".ds-table-panel { border: 1px solid var(--border, #e3e6eb); border-radius: var(--radius-lg, 12px); background: var(--surface, #ffffff); overflow-x: auto; font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; color: var(--text, #101828); } .ds-table { width: 100%; border-collapse: collapse; } .ds-table svg { display: block; } .ds-table th { height: 36px; padding: 0 16px; border-bottom: 1px solid var(--border, #e3e6eb); background: var(--surface-subtle, #f2f4f7); color: var(--text-secondary, #475467); font-size: 0.75rem; font-weight: 500; text-align: left; white-space: nowrap; } .ds-table th:first-child { border-top-left-radius: var(--radius-lg, 12px); } .ds-table th:last-child { border-top-right-radius: var(--radius-lg, 12px); } .ds-table td { padding: 12px 16px; border-bottom: 1px solid var(--border, #e3e6eb); vertical-align: middle; } .ds-table tbody tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover td { background: var(--surface-subtle, #f2f4f7); } .ds-table .ds-end { text-align: right; font-variant-numeric: tabular-nums; } .ds-table .ds-shrink { width: 1%; white-space: nowrap; } .ds-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; } .ds-sort { display: inline-flex; align-items: center; gap: 4px; margin: 0 -6px; padding: 4px 6px; border: 0; border-radius: var(--radius-sm, 6px); background: transparent; color: inherit; font: inherit; cursor: pointer; } .ds-sort:hover { background: var(--surface-hover, #eef1f5); color: var(--text, #101828); } th[aria-sort] .ds-sort { color: var(--text, #101828); } .ds-sort:focus-visible, .ds-btn-sm:focus-visible, .ds-btn-ghost-icon:focus-visible, .ds-cell-primary a:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-cell-primary { display: flex; flex-direction: column; gap: 2px; min-width: 0; } .ds-cell-primary a { color: var(--text, #101828); font-weight: 500; text-decoration: none; text-underline-offset: 3px; } .ds-cell-primary a:hover { text-decoration: underline; } .ds-cell-primary span { color: var(--text-muted, #5f6b7d); font-size: 0.8125rem; } .ds-tbadge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border: 1px solid var(--neutral-border, #e3e6eb); border-radius: 999px; background: var(--neutral-soft, #f2f4f7); color: var(--neutral-text, #475467); font-size: 0.75rem; font-weight: 500; line-height: 1; white-space: nowrap; } .ds-tbadge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .ds-tbadge[data-tone=\"error\"] { border-color: var(--error-border, #fecdca); background: var(--error-soft, #fef3f2); color: var(--error-text, #b42318); } .ds-tbadge[data-tone=\"warning\"] { border-color: var(--warning-border, #fedf89); background: var(--warning-soft, #fffaeb); color: var(--warning-text, #a14a07); } .ds-tbadge[data-tone=\"success\"] { border-color: var(--success-border, #abefc6); background: var(--success-soft, #ecfdf3); color: var(--success-text, #067647); } .ds-tbadge[data-tone=\"accent\"] { border-color: var(--accent-border, #c7d7fe); background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); } .ds-count-error { color: var(--error-text, #b42318); font-weight: 600; } .ds-count-warning { color: var(--warning-text, #a14a07); font-weight: 600; } .ds-count-zero { color: var(--text-muted, #5f6b7d); } .ds-delta { display: inline-flex; align-items: center; gap: 2px; font-size: 0.8125rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-delta[data-tone=\"worse\"] { color: var(--error-text, #b42318); } .ds-delta[data-tone=\"better\"] { color: var(--success-text, #067647); } .ds-delta[data-tone=\"same\"] { color: var(--text-muted, #5f6b7d); } .ds-when { color: var(--text-secondary, #475467); } .ds-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; } .ds-btn-sm { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid var(--border-strong, #cdd2da); border-radius: var(--radius, 8px); background: var(--surface, #ffffff); color: var(--text, #101828); font: inherit; font-size: 0.8125rem; font-weight: 500; line-height: 1; cursor: pointer; transition: background-color 150ms ease, transform 100ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); } .ds-btn-sm:hover { background: var(--surface-hover, #eef1f5); } .ds-btn-sm:active { transform: translateY(0.5px); } .ds-btn-ghost-icon { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: var(--radius, 8px); background: transparent; color: var(--text-secondary, #475467); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; } .ds-btn-ghost-icon:hover { background: var(--surface-hover, #eef1f5); color: var(--text, #101828); } .ds-table tbody tr.ds-row-updated td { animation: ds-row-flash 1600ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); } @keyframes ds-row-flash { from { background-color: var(--accent-soft, #eef4ff); } }"
+    },
+    {
+      "name": "Verdict Strip",
+      "kind": "custom",
+      "refersTo": "verdict-strip",
+      "description": "The report headline: errors and warnings as large tabular figures with deltas, then a recessed column with info and the new/fixed change chips. Columns rise in with a 60ms stagger when a run finishes on screen.",
+      "html": "<div class=\"ds-verdict\"><button type=\"button\" class=\"ds-verdict-primary\" aria-pressed=\"false\"><span class=\"ds-stat-label\"><span class=\"ds-vdot ds-vdot-error\"></span>Errors</span><span class=\"ds-verdict-value\"><span class=\"ds-vcount-error\">4</span><span class=\"ds-vdelta\" data-tone=\"worse\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg>+3</span></span></button><button type=\"button\" class=\"ds-verdict-primary\" aria-pressed=\"false\"><span class=\"ds-stat-label\"><span class=\"ds-vdot ds-vdot-warning\"></span>Warnings</span><span class=\"ds-verdict-value\"><span class=\"ds-vcount-warning\">12</span><span class=\"ds-vdelta\" data-tone=\"better\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14\"/><path d=\"m19 12-7 7-7-7\"/></svg>&minus;5</span></span></button><div class=\"ds-verdict-secondary\"><button type=\"button\" class=\"ds-verdict-line\" aria-pressed=\"false\"><span class=\"ds-vdot ds-vdot-neutral\"></span>Info <strong>7</strong><span class=\"ds-vdelta\" data-tone=\"same\">No change</span></button><div class=\"ds-verdict-line\">Since the last audit <button type=\"button\" class=\"ds-change-chip\" data-tone=\"worse\" aria-pressed=\"false\">+6 new</button><button type=\"button\" class=\"ds-change-chip\" data-tone=\"better\">8 fixed</button></div></div></div>",
+      "css": ".ds-verdict { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.25fr); max-width: 760px; border: 1px solid var(--border, #e3e6eb); border-radius: var(--radius-lg, 12px); background: var(--surface, #ffffff); overflow: hidden; font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; color: var(--text, #101828); } .ds-verdict svg { display: block; } .ds-verdict-primary { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 20px; border: 0; border-right: 1px solid var(--border, #e3e6eb); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background-color 150ms ease; } .ds-verdict-primary:hover { background: var(--surface-subtle, #f2f4f7); } .ds-verdict-primary[aria-pressed=\"true\"] { background: var(--accent-soft, #eef4ff); } .ds-verdict-primary:focus-visible, .ds-verdict-line:focus-visible, .ds-change-chip:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: -3px; } .ds-stat-label { display: flex; align-items: center; gap: 6px; color: var(--text-secondary, #475467); font-size: 0.8125rem; font-weight: 500; } .ds-vdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; } .ds-vdot-error { color: var(--error, #d92d20); } .ds-vdot-warning { color: var(--warning, #f79009); } .ds-vdot-neutral { color: var(--neutral, #98a2b3); } .ds-verdict-value { display: flex; align-items: baseline; gap: 8px; font-size: 2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; } .ds-vcount-error { color: var(--error-text, #b42318); } .ds-vcount-warning { color: var(--warning-text, #a14a07); } .ds-vdelta { display: inline-flex; align-items: center; gap: 2px; font-size: 0.8125rem; font-weight: 500; letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-vdelta[data-tone=\"worse\"] { color: var(--error-text, #b42318); } .ds-vdelta[data-tone=\"better\"] { color: var(--success-text, #067647); } .ds-vdelta[data-tone=\"same\"] { color: var(--text-muted, #5f6b7d); } .ds-verdict-secondary { display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; padding: 16px 20px; background: var(--surface-subtle, #f2f4f7); } .ds-verdict-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0; border: 0; background: none; color: var(--text-secondary, #475467); font: inherit; font-size: 0.8125rem; text-align: left; } .ds-verdict-line strong { color: var(--text, #101828); font-variant-numeric: tabular-nums; } button.ds-verdict-line { margin: -2px -6px; padding: 2px 6px; border-radius: var(--radius-sm, 6px); cursor: pointer; } button.ds-verdict-line:hover { background: var(--surface-hover, #eef1f5); } button.ds-verdict-line[aria-pressed=\"true\"] { background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); } .ds-change-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border: 1px solid var(--neutral-border, #e3e6eb); border-radius: 999px; background: var(--surface, #ffffff); color: var(--text-secondary, #475467); font: inherit; font-size: 0.75rem; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; } .ds-change-chip[data-tone=\"worse\"] { border-color: var(--error-border, #fecdca); background: var(--error-soft, #fef3f2); color: var(--error-text, #b42318); } .ds-change-chip[data-tone=\"better\"] { border-color: var(--success-border, #abefc6); background: var(--success-soft, #ecfdf3); color: var(--success-text, #067647); } .ds-change-chip[aria-pressed=\"true\"] { box-shadow: 0 0 0 2px var(--accent, #2563eb); } .ds-verdict > * { animation: ds-fade-rise 420ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)) backwards; } .ds-verdict > :nth-child(2) { animation-delay: 60ms; } .ds-verdict > :nth-child(3) { animation-delay: 120ms; } @keyframes ds-fade-rise { from { opacity: 0; transform: translateY(6px); } } @media (prefers-reduced-motion: reduce) { .ds-verdict > * { animation-name: ds-fade; animation-delay: 0ms !important; } @keyframes ds-fade { from { opacity: 0; } } }"
+    },
+    {
+      "name": "Live Progress Panel",
+      "kind": "custom",
+      "refersTo": "progress-panel",
+      "description": "Shown while an audit is queued or running: stage in words, a four-step stage track (crawl fills by pages crawled against the queue; unmeasurable stages sweep), current URL in mono, and tweened live statistics.",
+      "html": "<section class=\"ds-progress\" aria-label=\"Audit progress\"><div class=\"ds-progress-head\"><div class=\"ds-progress-stage\" role=\"status\" aria-live=\"polite\"><svg class=\"ds-progress-spin\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-6.219-8.56\"/></svg>Crawling pages</div><span class=\"ds-progress-note\">Results appear here when the audit finishes.</span></div><ol class=\"ds-stage-track\" aria-label=\"Audit stages\"><li class=\"ds-stage\" data-state=\"done\"><span class=\"ds-stage-bar\"><span class=\"ds-stage-fill\"></span></span><span>Discover</span></li><li class=\"ds-stage\" data-state=\"current\" aria-current=\"step\"><span class=\"ds-stage-bar\"><span class=\"ds-stage-fill\" style=\"transform: scaleX(0.42)\"></span></span><span>Crawl pages</span></li><li class=\"ds-stage\" data-state=\"upcoming\"><span class=\"ds-stage-bar\"><span class=\"ds-stage-fill\"></span></span><span>Check links</span></li><li class=\"ds-stage\" data-state=\"upcoming\"><span class=\"ds-stage-bar\"><span class=\"ds-stage-fill\"></span></span><span>Lighthouse</span></li></ol><p class=\"ds-progress-url\">https://example.org/about/team</p><dl class=\"ds-progress-stats\"><div><dt>Pages crawled</dt><dd>42</dd></div><div><dt>Pages queued</dt><dd>58</dd></div><div><dt>Links checked</dt><dd>316</dd></div><div><dt>Issues so far</dt><dd>9</dd></div></dl></section>",
+      "css": ".ds-progress { display: flex; flex-direction: column; gap: 16px; max-width: 760px; padding: 20px; border: 1px solid var(--accent-border, #c7d7fe); border-radius: var(--radius-lg, 12px); background: var(--accent-soft, #eef4ff); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; color: var(--text, #101828); } .ds-progress-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .ds-progress-stage { display: flex; align-items: center; gap: 8px; font-weight: 600; } .ds-progress-spin { display: block; color: var(--accent-text, #1d4ed8); animation: ds-spin 900ms linear infinite; } .ds-progress-note { color: var(--text-secondary, #475467); font-size: 0.8125rem; } .ds-stage-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; } .ds-stage { display: flex; flex-direction: column; gap: 6px; color: var(--text-secondary, #475467); font-size: 0.75rem; transition: color 300ms ease; } .ds-stage[data-state=\"current\"] { color: var(--text, #101828); font-weight: 600; } .ds-stage-bar { position: relative; display: block; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--accent, #2563eb) 18%, transparent); overflow: hidden; } .ds-stage-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--accent, #2563eb); transform: scaleX(0); transform-origin: left center; transition: transform 600ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)); } .ds-stage[data-state=\"done\"] .ds-stage-fill { transform: scaleX(1); } .ds-stage-indeterminate .ds-stage-fill { transform: scaleX(1); background: linear-gradient(90deg, transparent, var(--accent, #2563eb) 35%, var(--accent, #2563eb) 65%, transparent) no-repeat; background-size: 45% 100%; animation: ds-stage-sweep 1500ms var(--ease-in-out, cubic-bezier(0.65, 0, 0.35, 1)) infinite; } @keyframes ds-stage-sweep { from { background-position: -60% 0; } to { background-position: 160% 0; } } .ds-progress-url { margin: 0; color: var(--text-secondary, #475467); font-family: var(--font-mono, ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace); font-size: 0.8125rem; overflow-wrap: anywhere; } .ds-progress-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 0; } .ds-progress-stats div { display: flex; flex-direction: column; } .ds-progress-stats dt { color: var(--text-secondary, #475467); font-size: 0.75rem; } .ds-progress-stats dd { margin: 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; } @keyframes ds-spin { to { transform: rotate(360deg); } } @media (prefers-reduced-motion: reduce) { .ds-stage-fill { transition: none; } .ds-stage-indeterminate .ds-stage-fill { background: var(--accent, #2563eb); opacity: 0.6; animation: none; } .ds-progress-spin { animation-duration: 1800ms; } }"
+    },
+    {
+      "name": "Issue Group List",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "The report's ranked fix list: bordered disclosure rows, most severe first, each with severity badge, title, New tag and right-aligned category and breadth; occurrences list the page URL in mono.",
+      "html": "<div class=\"ds-disclosure-list\"><details class=\"ds-disclosure\" open><summary><svg class=\"ds-chevron\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg><span class=\"ds-disclosure-title\"><span class=\"ds-ibadge\" data-tone=\"error\"><span class=\"ds-ibadge-dot\"></span>Error</span><strong>Broken internal link</strong><span class=\"ds-tag-new\">New</span></span><span class=\"ds-disclosure-meta\"><span>Broken links</span><span>2 pages</span></span></summary><div class=\"ds-disclosure-body\"><ul class=\"ds-occurrences\"><li class=\"ds-occurrence\"><div class=\"ds-occurrence-head\"><a href=\"#\">https://example.org/about</a><span class=\"ds-tag-new\">New</span></div><p>The link to /team returned 404 Not found.</p></li><li class=\"ds-occurrence\"><div class=\"ds-occurrence-head\"><a href=\"#\">https://example.org/contact</a></div><p>The link to /team returned 404 Not found.</p></li></ul></div></details><details class=\"ds-disclosure\"><summary><svg class=\"ds-chevron\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg><span class=\"ds-disclosure-title\"><span class=\"ds-ibadge\" data-tone=\"warning\"><span class=\"ds-ibadge-dot\"></span>Warning</span><strong>Missing meta description</strong></span><span class=\"ds-disclosure-meta\"><span>SEO</span><span>12 pages</span></span></summary><div class=\"ds-disclosure-body\"><ul class=\"ds-occurrences\"><li class=\"ds-occurrence\"><div class=\"ds-occurrence-head\"><a href=\"#\">https://example.org/news</a></div><p>This page has no meta description.</p></li></ul></div></details></div>",
+      "css": ".ds-disclosure-list { max-width: 760px; border: 1px solid var(--border, #e3e6eb); border-radius: var(--radius-lg, 12px); background: var(--surface, #ffffff); font-family: var(--font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif); font-size: 0.875rem; color: var(--text, #101828); } .ds-disclosure { border-bottom: 1px solid var(--border, #e3e6eb); } .ds-disclosure:last-child { border-bottom: 0; } .ds-disclosure > summary { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; list-style: none; } .ds-disclosure > summary::-webkit-details-marker { display: none; } .ds-disclosure > summary:hover { background: var(--surface-subtle, #f2f4f7); } .ds-disclosure > summary:focus-visible, .ds-occurrence a:focus-visible { outline: 2px solid var(--focus-ring, #2563eb); outline-offset: 2px; } .ds-disclosure:first-child > summary { border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0; } .ds-disclosure:last-child:not([open]) > summary { border-radius: 0 0 var(--radius-lg, 12px) var(--radius-lg, 12px); } .ds-chevron { display: block; flex-shrink: 0; color: var(--text-muted, #5f6b7d); transition: transform 150ms ease; } .ds-disclosure[open] > summary .ds-chevron { transform: rotate(90deg); } .ds-disclosure-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; flex: 1; } .ds-disclosure-title strong { font-weight: 500; overflow-wrap: anywhere; } .ds-disclosure-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; color: var(--text-secondary, #475467); font-size: 0.8125rem; font-variant-numeric: tabular-nums; } .ds-ibadge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border: 1px solid var(--neutral-border, #e3e6eb); border-radius: 999px; background: var(--neutral-soft, #f2f4f7); color: var(--neutral-text, #475467); font-size: 0.75rem; font-weight: 500; line-height: 1; white-space: nowrap; } .ds-ibadge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .ds-ibadge[data-tone=\"error\"] { border-color: var(--error-border, #fecdca); background: var(--error-soft, #fef3f2); color: var(--error-text, #b42318); } .ds-ibadge[data-tone=\"warning\"] { border-color: var(--warning-border, #fedf89); background: var(--warning-soft, #fffaeb); color: var(--warning-text, #a14a07); } .ds-ibadge[data-tone=\"success\"] { border-color: var(--success-border, #abefc6); background: var(--success-soft, #ecfdf3); color: var(--success-text, #067647); } .ds-ibadge[data-tone=\"accent\"] { border-color: var(--accent-border, #c7d7fe); background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); } .ds-tag-new { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: var(--radius-sm, 6px); background: var(--accent-soft, #eef4ff); color: var(--accent-text, #1d4ed8); font-size: 11px; font-weight: 600; letter-spacing: 0.01em; } .ds-disclosure-body { padding: 0 16px 16px 44px; } .ds-occurrences { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border, #e3e6eb); } .ds-occurrence { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border, #e3e6eb); } .ds-occurrence:last-child { border-bottom: 0; padding-bottom: 0; } .ds-occurrence-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; } .ds-occurrence a { color: var(--accent-text, #1d4ed8); font-family: var(--font-mono, ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, \"Liberation Mono\", monospace); font-size: 0.8125rem; text-decoration: none; text-underline-offset: 3px; overflow-wrap: anywhere; } .ds-occurrence a:hover { text-decoration: underline; } .ds-occurrence p { margin: 0; color: var(--text-secondary, #475467); overflow-wrap: anywhere; } @supports (interpolate-size: allow-keywords) { .ds-disclosure { interpolate-size: allow-keywords; } .ds-disclosure::details-content { block-size: 0; overflow: clip; transition: block-size 240ms var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1)), content-visibility 240ms allow-discrete; } .ds-disclosure[open]::details-content { block-size: auto; } } @media (prefers-reduced-motion: reduce) { .ds-disclosure::details-content { transition: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Triage Ledger",
+    "overview": "Website Auditor is an operator's console built to the category standard set by Ahrefs Site Audit, Sitebulb and the Vercel dashboard. Every screen answers two questions in order: what is broken, and what has changed since the last run. The world is cool grey paper with hairline borders, one blue for action and location, and a locked semantic set (red, amber, green, slate) that carries every verdict. Nothing is decorative. Density is moderate (14px base text, 32px controls), tuned for sweeping a portfolio table and then reading one report in depth.\n\nHierarchy comes from severity and position rather than scale or colour fields: errors before warnings before info, one verdict strip above a ranked list of collapsible issue groups, and counts set in tabular figures with signed deltas beside them. The dark navy sidebar is the only large field of colour; the content plane stays flat and light (near-black in dark mode). Light and dark themes are one token set, flipped by `prefers-color-scheme`. There is no in-app theme switch.\n\nMotion reports work rather than decorating it. Routine state changes run 100–240ms on a single ease-out curve. Longer durations appear only where they carry information: the live stage track, counters that count rather than jump, the finish moment when results arrive, and a brief tint on a table row whose status just changed. Reduced motion removes travel and sweeping loops but keeps fades, colour and state. Confirmed refusals from the direction contract: no dark gradient hero card, no rows of identical metric cards, no gradients or glow on surfaces, and no web fonts or external assets.",
+    "keyCharacteristics": [
+      "Cool neutral greys, a single blue, and four semantic tones, each with a dark-theme counterpart.",
+      "One system UI sans for everything; system mono only for URLs, patterns, selectors and code.",
+      "Tabular figures on every count, with change since the last run shown beside it.",
+      "1px borders and tonal steps instead of shadows; 8px controls, 12px containers.",
+      "A fixed dark sidebar and a 1280px content column; tables reflow to rows on small screens.",
+      "Quiet, informational motion on one ease-out curve, with a full reduced-motion path."
+    ],
+    "rules": [
+      {
+        "name": "The One Blue Rule",
+        "body": "Blue is the only hue that never passes judgement. It marks where to act, where you are, what is selected, and what is live or new. It never means good or bad; that belongs to the semantic tones.",
+        "section": "colors"
+      },
+      {
+        "name": "The Verdict Set Rule",
+        "body": "Red, amber, green and slate are reserved for verdicts and always travel as their four-step set. Text on a soft fill uses the `-text` step, never the solid; solids are for dots, bars and solid buttons only.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every number that can change or be compared is set in tabular figures: counts, deltas, scores, durations and live statistics.",
+        "section": "typography"
+      },
+      {
+        "name": "The Machine-Strings Rule",
+        "body": "Mono marks strings a machine reads: URLs, patterns, selectors, source locations and code. It is never used for headings, numbers or prose.",
+        "section": "typography"
+      },
+      {
+        "name": "The Three-Weight Rule",
+        "body": "Weights are 400 (reading), 500 (controls and labels) and 600 (headings, figures, non-zero counts). Everything is sentence case; nothing is uppercased or letter-spaced for effect.",
+        "section": "typography"
+      },
+      {
+        "name": "The Header-Owns-the-Action Rule",
+        "body": "A page's primary action sits at the right of its page header (Add website, Run audit, Run again). The only exception is the sticky unsaved-changes bar, which owns Save and \"Save and run audit\" while edits are pending.",
+        "section": "layout"
+      },
+      {
+        "name": "The Float-Only Rule",
+        "body": "A shadow means \"this sits above the page\". Panels, tables, cards and the verdict strip never carry one.",
+        "section": "elevation"
+      },
+      {
+        "name": "The 8/12 Rule",
+        "body": "Things you press are 8px; things that hold content are 12px. A pill always means status or count, never an action.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do use the CSS custom properties (`var(--accent)`, `var(--space-4)`, `var(--radius-lg)`) for every colour, space and radius, so both themes stay in step.",
+      "Do pair every status colour with a dot or spinner and a plain-language label from the shared status vocabulary.",
+      "Do show change since the last run beside any count that has a predecessor, using the delta, change-chip or New-tag patterns.",
+      "Do order findings most severe first: errors, then warnings, then info.",
+      "Do set counts, deltas and scores in tabular figures, and set URLs and patterns in mono with `overflow-wrap: anywhere` (or truncate with a full-value tooltip inside fixed-height lists).",
+      "Do keep routine transitions within 100–240ms on `cubic-bezier(0.16, 1, 0.3, 1)`, and give every new animation a reduced-motion path that removes travel but keeps the fade or state change.",
+      "Do keep text on fills at 4.5:1 or better in both themes, per the product's WCAG 2.2 AA commitment, and check every new surface in light and dark."
+    ],
+    "donts": [
+      "Don't build a dark gradient hero card or a row of identical metric cards; the verdict strip is the summary pattern.",
+      "Don't put gradients or glows on surfaces, cards or buttons. The only gradients in the system are functional: the skeleton shimmer, the indeterminate stage sweep and the tab-overflow fade mask.",
+      "Don't use blue to mean good, bad or severity, and don't use red, amber or green for anything but verdicts.",
+      "Don't add shadows to panels, tables or cards at rest.",
+      "Don't uppercase labels or add eyebrow text above headings; headings and labels are sentence case.",
+      "Don't use mono for headings, prose or numbers.",
+      "Don't load web fonts, icon fonts or assets from external hosts; this is a private, self-hosted install."
+    ]
+  }
+}

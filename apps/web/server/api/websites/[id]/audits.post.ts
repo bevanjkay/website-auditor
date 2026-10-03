@@ -26,6 +26,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (!website.isActive) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: "This website is archived. Restore it before running an audit.",
+    });
+  }
+
   const crawlRules = crawlRulesSchema.parse(website.crawlRulesJson ?? {});
   const lighthouseTargets = lighthouseTargetsSchema.parse(website.lighthouseTargetsJson ?? []);
   const typoLanguage = typoLanguageSchema.parse(website.typoLanguage ?? "en");
