@@ -1,4 +1,4 @@
-import { chunkRowsForInsert } from "@website-auditor/db";
+import { brokenLinkTarget, chunkRowsForInsert } from "@website-auditor/db";
 
 import { describe, expect, it } from "vitest";
 
@@ -26,5 +26,15 @@ describe("chunkRowsForInsert", () => {
 
   it("never produces an empty chunk even with absurd column counts", () => {
     expect(chunkRowsForInsert([1, 2, 3], 1_000_000)).toEqual([[1], [2], [3]]);
+  });
+});
+
+describe("brokenLinkTarget", () => {
+  it("prefers the target recorded in evidence", () => {
+    expect(brokenLinkTarget({ message: "ignored", evidenceJson: { targetUrl: "https://a.test/x" } })).toBe("https://a.test/x");
+  });
+
+  it("falls back to the URL at the start of older messages", () => {
+    expect(brokenLinkTarget({ message: "https://b.test/y returned 404.", evidenceJson: {} })).toBe("https://b.test/y");
   });
 });

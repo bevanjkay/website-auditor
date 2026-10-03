@@ -14,11 +14,12 @@ import type {
   DiscoverySource,
   DiscoverySourceMode,
   LighthouseTargets,
+  LinkIgnore,
   TypoLanguage,
 } from "@website-auditor/shared";
 
 import { createHash } from "node:crypto";
-import { createEmptyCrawlRules } from "@website-auditor/shared";
+import { createEmptyCrawlRules, isLinkIgnored } from "@website-auditor/shared";
 import { launch } from "chrome-launcher";
 import dictionary from "dictionary-en";
 import dictionaryAu from "dictionary-en-au";
@@ -1820,6 +1821,7 @@ function markBrokenLinkIssues(links: AuditLinkRecord[]): AuditIssueRecord[] {
       title: "Broken link detected",
       message: `${link.targetUrl} returned ${link.httpStatus ?? "no response"}.`,
       evidence: {
+        targetUrl: link.targetUrl,
         targetType: link.targetType,
         status: link.httpStatus,
       },
@@ -1869,6 +1871,7 @@ export async function runAudit(
     onProgress?: (progress: AuditProgress) => void | Promise<void>;
     shouldCancel?: () => boolean | Promise<boolean>;
     getTypoAllowlist?: () => string[] | Promise<string[]>;
+    getLinkIgnores?: () => LinkIgnore[] | Promise<LinkIgnore[]>;
     crawlRules?: CrawlRules;
     discovery?: DiscoveryPreview;
     lighthouseTargets?: LighthouseTargets;
@@ -2071,7 +2074,13 @@ export async function runAudit(
     }
   }
 
-  const uniqueLinks = dedupeUrls(links.map(link => link.targetUrl));
+  // Ignored targets are never requested: they are usually sites that block bots, and checking them only slows the audit.
+  const linkIgnores = options.getLinkIgnores ? await options.getLinkIgnores() : [];
+  const uniqueLinks = dedupeUrls(links.map(link => link.targetUrl)).filter(url => !isLinkIgnored(url, linkIgnores));
+  const ignoredLinkCount = links.filter(link => isLinkIgnored(link.targetUrl, linkIgnores)).length;
+  if (ignoredLinkCount) {
+    await emit(events, "info", "Skipped ignored links", { count: ignoredLinkCount }, options.onEvent);
+  }
   const linkStatusMap = new Map<string, number | null>();
   const linkLimit = pLimit(config.linkConcurrency);
 
@@ -2100,7 +2109,7 @@ export async function runAudit(
   for (const link of links) {
     const status = linkStatusMap.get(link.targetUrl) ?? null;
     link.httpStatus = status;
-    link.isBroken = status === null || status >= 400;
+    link.isBroken = !isLinkIgnored(link.targetUrl, linkIgnores) && (status === null || status >= 400);
   }
 
   issues.push(...buildDuplicateContentIssues(pages));

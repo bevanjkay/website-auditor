@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { LinkIgnore } from "@website-auditor/shared";
+
+import { parseLinkIgnore } from "@website-auditor/shared";
+
 type Matcher = "glob" | "exact" | "prefix";
 type TypoLanguage = "en" | "en-au" | "en-gb" | "en-us";
 
@@ -30,6 +34,7 @@ interface WebsiteDetailResponse {
     isActive: boolean;
     typoLanguage: TypoLanguage;
     typoAllowlistJson: string[];
+    linkIgnoresJson: LinkIgnore[];
     crawlRulesJson: { allow: CrawlRuleRow[]; deny: CrawlRuleRow[] };
     lighthouseTargetsJson: string[];
     latestRun: { id: string; status: string } | null;
@@ -92,6 +97,7 @@ interface SettingsDraft {
   typoLanguage: TypoLanguage;
   lighthouseTargets: string[];
   typoAllowlist: string[];
+  linkIgnores: LinkIgnore[];
   allow: CrawlRuleRow[];
   deny: CrawlRuleRow[];
 }
@@ -102,6 +108,7 @@ function draftFromWebsite(source: WebsiteDetailResponse["website"] | undefined):
     typoLanguage: source?.typoLanguage ?? "en",
     lighthouseTargets: [...(source?.lighthouseTargetsJson ?? [])],
     typoAllowlist: [...(source?.typoAllowlistJson ?? [])],
+    linkIgnores: (source?.linkIgnoresJson ?? []).map(rule => ({ ...rule })),
     allow: (source?.crawlRulesJson.allow ?? []).map(rule => ({ ...rule })),
     deny: (source?.crawlRulesJson.deny ?? []).map(rule => ({ ...rule })),
   };
@@ -119,6 +126,7 @@ function normalise(value: SettingsDraft) {
     typoLanguage: value.typoLanguage,
     lighthouseTargets: [...new Set(value.lighthouseTargets.map(target => target.trim()).filter(Boolean))],
     typoAllowlist: [...value.typoAllowlist],
+    linkIgnores: value.linkIgnores.map(rule => ({ kind: rule.kind, value: rule.value })),
     crawlRules: { allow: rules(value.allow), deny: rules(value.deny) },
   };
 }
@@ -248,6 +256,26 @@ function addLighthouseTarget(url: string) {
 
 function removeLighthouseTarget(url: string) {
   draft.lighthouseTargets = draft.lighthouseTargets.filter(item => item !== url);
+}
+
+const linkIgnoreInput = ref("");
+const linkIgnoreError = ref("");
+
+function addLinkIgnore() {
+  const rule = parseLinkIgnore(linkIgnoreInput.value);
+  if (!rule) {
+    linkIgnoreError.value = "Enter a full URL, or a domain like linkedin.com.";
+    return;
+  }
+  linkIgnoreError.value = "";
+  if (!draft.linkIgnores.some(existing => existing.kind === rule.kind && existing.value === rule.value)) {
+    draft.linkIgnores.push(rule);
+  }
+  linkIgnoreInput.value = "";
+}
+
+function removeLinkIgnore(rule: LinkIgnore) {
+  draft.linkIgnores = draft.linkIgnores.filter(existing => existing.kind !== rule.kind || existing.value !== rule.value);
 }
 
 function removeAllowlistWord(word: string) {
@@ -586,6 +614,83 @@ function describeRule(rule: DiscoveryEntryRow["matchedRule"]) {
                 class="empty-inline"
               >
                 No allowed words yet.
+              </p>
+            </div>
+          </section>
+
+          <section
+            class="panel"
+            aria-labelledby="ignored-links-heading"
+          >
+            <div class="panel-header">
+              <div>
+                <h2 id="ignored-links-heading">
+                  Ignored links
+                </h2>
+                <p>Links that are never checked or reported as broken. Useful for sites that block automated checks.</p>
+              </div>
+            </div>
+            <div class="panel-body stack">
+              <div class="field">
+                <label for="link-ignore-input">Add a URL or domain</label>
+                <div class="row">
+                  <input
+                    id="link-ignore-input"
+                    v-model="linkIgnoreInput"
+                    class="mono"
+                    style="flex: 1 1 240px;"
+                    spellcheck="false"
+                    autocomplete="off"
+                    placeholder="linkedin.com or https://example.com/old-page"
+                    :aria-invalid="Boolean(linkIgnoreError)"
+                    aria-describedby="link-ignore-hint"
+                    @keydown.enter.prevent="addLinkIgnore"
+                  >
+                  <button
+                    type="button"
+                    class="btn"
+                    :disabled="!linkIgnoreInput.trim()"
+                    @click="addLinkIgnore"
+                  >
+                    Add
+                  </button>
+                </div>
+                <span
+                  id="link-ignore-hint"
+                  :class="linkIgnoreError ? 'field-error' : 'field-hint'"
+                >{{ linkIgnoreError || 'A domain also covers its subdomains, so linkedin.com includes www.linkedin.com.' }}</span>
+              </div>
+              <ul
+                v-if="draft.linkIgnores.length"
+                class="chip-list"
+              >
+                <li
+                  v-for="rule in draft.linkIgnores"
+                  :key="`${rule.kind}:${rule.value}`"
+                  class="chip-row"
+                >
+                  <span
+                    class="mono"
+                    :title="rule.value"
+                  >{{ rule.value }}</span>
+                  <span class="row">
+                    <span class="badge badge-square">{{ rule.kind === 'domain' ? 'Domain' : 'URL' }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm btn-icon"
+                      :aria-label="`Stop ignoring ${rule.value}`"
+                      @click="removeLinkIgnore(rule)"
+                    >
+                      <AppIcon name="x" />
+                    </button>
+                  </span>
+                </li>
+              </ul>
+              <p
+                v-else
+                class="empty-inline"
+              >
+                No ignored links. You can also ignore a link from the Broken links tab of a report.
               </p>
             </div>
           </section>
