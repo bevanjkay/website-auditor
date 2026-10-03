@@ -433,7 +433,7 @@ Two-column views (the website overview at 2fr/1fr, crawl settings at 1.1fr/0.9fr
 The system is flat. Depth comes from tonal steps (canvas, then sheet, then recessed sheet) and 1px borders, never from shadows at rest. Shadows exist only for elements that float above content, plus two hairline rings that mark a pressed state.
 
 ### Shadow Vocabulary
-- **Popover** (`box-shadow: 0 8px 24px -6px rgb(16 24 40 / 0.18), 0 2px 6px -2px rgb(16 24 40 / 0.08)`; dark uses `rgb(0 0 0 / 0.6)` and `rgb(0 0 0 / 0.4)`): the URL combobox list, the sticky unsaved-changes bar, the skip link.
+- **Popover** (`box-shadow: 0 8px 24px -6px rgb(16 24 40 / 0.18), 0 2px 6px -2px rgb(16 24 40 / 0.08)`; dark uses `rgb(0 0 0 / 0.6)` and `rgb(0 0 0 / 0.4)`): the URL combobox list, the report's Export menu, the sticky unsaved-changes bar, the skip link.
 - **Segment ring** (`box-shadow: 0 0 0 1px var(--border)`, both themes): the pressed button inside a segmented control.
 - **Input focus halo** (`box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent)`): focused text inputs, selects and textareas, which drop the outline in favour of this halo.
 - **Pressed ring** (`box-shadow: 0 0 0 2px var(--accent)`): the "+N new" change chip while it filters the report.
@@ -493,6 +493,9 @@ Compact, bordered and quiet; only the primary is filled.
 
 ### Alerts
 A full-width 8px box with a leading 16px icon, optional bold title, body copy in Slate and an actions row of small buttons. Tones follow the semantic sets (error, warning, success, accent, neutral); errors announce as `alert`, everything else as `status`. Dismissible alerts rise in on entry.
+
+### Menus
+A secondary button with a trailing chevron opens a popover list anchored to its right edge: 248px minimum, 8px radius, Popover shadow, 4px inset. Each item pairs a 16px Slate icon with a medium label and a muted one-line hint beneath ("For an LLM, a ticket or a chat"). Menus close on choice, outside press or Escape (which returns focus to the trigger), and rise in over 140ms. The report's Export menu is the only one today.
 
 ### Tables
 The sites table, audit history and users list share one pattern: a 36px header row on Recessed Sheet with 12px Slate labels, sortable headers as quiet buttons with a 12px direction arrow, 12px by 16px cells, hairline row dividers, and a Recessed Sheet hover. The lead cell stacks the name (Ink, medium) over a muted host. Numeric columns align right in tabular figures; non-zero error and warning counts are semibold in red and amber, zeros are muted, and a missing value is an em dash. Row actions sit in a shrink-wrapped trailing cell.
