@@ -185,6 +185,24 @@ export function isCheckableLinkTarget(candidate: string): boolean {
   }
 }
 
+const fileExtensionPattern = /\.(?:pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|csv|zip|rar|7z|gz|tar|jpe?g|png|gif|webp|avif|svg|ico|bmp|tiff?|heic|mp3|wav|m4a|ogg|mp4|m4v|mov|avi|webm|mkv|ics|epub|dmg|exe|apk|json|xml|txt)$/i;
+
+// Files are link-checked but never rendered: opening them in a browser aborts as a download, which used to surface as a page failure.
+export function looksLikeFileUrl(candidate: string): boolean {
+  try {
+    return fileExtensionPattern.test(new URL(candidate).pathname);
+  }
+  catch {
+    return false;
+  }
+}
+
+class NonHtmlResourceError extends Error {
+  constructor(readonly url: string, readonly contentType: string | null) {
+    super(`${url} is not an HTML page${contentType ? ` (${contentType})` : ""}.`);
+  }
+}
+
 function escapeRegex(value: string): string {
   return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
 }
@@ -1151,7 +1169,17 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
     const response = await page.goto(url, {
       waitUntil: "networkidle",
       timeout,
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.message.includes("Download is starting")) {
+        throw new NonHtmlResourceError(url, null);
+      }
+      throw error;
     });
+
+    const contentType = response?.headers()["content-type"] ?? null;
+    if (contentType && !/html/i.test(contentType)) {
+      throw new NonHtmlResourceError(url, contentType);
+    }
 
     const extracted = await page.evaluate(() => {
       const textRoot = document.querySelector("main, article, [role=\"main\"]") ?? document.body;
@@ -1719,7 +1747,7 @@ async function analysePage(
         nofollow: link.nofollow,
       });
 
-      if (!link.nofollow) {
+      if (!link.nofollow && !looksLikeFileUrl(normalized)) {
         discoveredUrls.push({
           url: normalized,
           depth: item.depth + 1,
@@ -1966,7 +1994,11 @@ export async function runAudit(
     linksChecked: 0,
     queueSize: includedEntries.length,
   });
-  const queue: QueueItem[] = includedEntries.map(entry => ({
+  const fileEntries = includedEntries.filter(entry => looksLikeFileUrl(entry.url));
+  if (fileEntries.length) {
+    await emit(events, "info", "Skipped files listed for crawling", { count: fileEntries.length }, options.onEvent);
+  }
+  const queue: QueueItem[] = includedEntries.filter(entry => !looksLikeFileUrl(entry.url)).map(entry => ({
     url: entry.url,
     depth: 0,
     fromSitemap: entry.source === "sitemap",
@@ -2012,6 +2044,10 @@ export async function runAudit(
         );
       }
       catch (error) {
+        if (error instanceof NonHtmlResourceError) {
+          await emit(events, "info", "Skipped a non-HTML resource", { url: item.url, contentType: error.contentType }, options.onEvent);
+          return null;
+        }
         issues.push({
           pageUrl: item.url,
           category: "crawl",

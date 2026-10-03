@@ -9,6 +9,7 @@ import {
   detectTypos,
   extractLighthouseFindings,
   isCheckableLinkTarget,
+  looksLikeFileUrl,
   parseRobotsForSitemaps,
   parseSitemapXml,
   redirectsAwayFromSite,
@@ -414,5 +415,19 @@ describe("buildPageIssues content checks", () => {
     expect(codesFor(makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }))).toContain("mixed_content");
     expect(buildPageIssues("http://example.com/page", makeExtractedPage({ insecureResources: ["http://cdn.example.com/a.js"] }), [])
       .map(issue => issue.code)).not.toContain("mixed_content");
+  });
+});
+
+describe("looksLikeFileUrl", () => {
+  it("recognises documents, images and media by their path", () => {
+    expect(looksLikeFileUrl("https://example.com/files/term-4-newsletter.PDF")).toBe(true);
+    expect(looksLikeFileUrl("https://example.com/wp-content/uploads/hero.jpg?ver=2")).toBe(true);
+    expect(looksLikeFileUrl("https://example.com/events/rally.ics")).toBe(true);
+  });
+
+  it("leaves pages alone, including ones whose query mentions a file", () => {
+    expect(looksLikeFileUrl("https://example.com/about/")).toBe(false);
+    expect(looksLikeFileUrl("https://example.com/download?file=report.pdf")).toBe(false);
+    expect(looksLikeFileUrl("https://example.com/index.php")).toBe(false);
   });
 });
