@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./report.js";
+
 export const userRoles = ["admin", "user"] as const;
 export type UserRole = (typeof userRoles)[number];
 

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { groupIssues } from "@website-auditor/shared";
+
 type TabId = "issues" | "links" | "lighthouse" | "pages" | "log";
 type LighthouseCategory = "performance" | "accessibility" | "best-practices" | "seo";
 
@@ -248,27 +250,11 @@ const filteredIssues = computed(() => {
   });
 });
 
-const issueGroups = computed(() => {
-  const groups = new Map<string, { key: string; code: string; title: string; severity: string; category: string; items: AuditIssueRow[]; newCount: number; pageCount: number }>();
-  for (const issue of filteredIssues.value) {
-    // Broken links split into internal and external targets with different severities, so name the target type.
-    const targetType = issue.code === "broken_link" && typeof issue.evidenceJson?.targetType === "string" ? issue.evidenceJson.targetType : "";
-    const key = `${issue.code}|${issue.severity}|${targetType}`;
-    const title = targetType ? `Broken ${targetType} link` : issue.title;
-    const group = groups.get(key) ?? { key, code: issue.code, title, severity: issue.severity, category: issue.category, items: [], newCount: 0, pageCount: 0 };
-    group.items.push(issue);
-    if (newIssueIds.value.has(issue.id)) {
-      group.newCount += 1;
-    }
-    groups.set(key, group);
-  }
-  return [...groups.values()]
-    .map(group => ({ ...group, pageCount: new Set(group.items.map(item => item.pageUrl ?? "")).size }))
-    .sort((left, right) =>
-      (severityMeta[left.severity]?.rank ?? 9) - (severityMeta[right.severity]?.rank ?? 9)
-      || right.items.length - left.items.length
-      || left.title.localeCompare(right.title));
-});
+const issueGroups = computed(() => groupIssues(filteredIssues.value).map(group => ({
+  ...group,
+  newCount: group.items.filter(item => newIssueIds.value.has(item.id)).length,
+  pageCount: new Set(group.items.map(item => item.pageUrl ?? "")).size,
+})));
 
 const groupLimit = ref(30);
 const visibleGroups = computed(() => issueGroups.value.slice(0, groupLimit.value));
@@ -547,10 +533,92 @@ watch(isActive, (active) => {
   }
 }, { immediate: true });
 
+const exportMenu = ref<HTMLDetailsElement | null>(null);
+const exportNotice = ref<{ tone: "success" | "error"; message: string } | null>(null);
+let markdownRequest: Promise<string> | null = null;
+let markdownText: string | null = null;
+
+function closeExportMenu() {
+  if (exportMenu.value) {
+    exportMenu.value.open = false;
+  }
+}
+
+// Fetch as soon as the menu opens so the copy happens inside the click, which Safari requires for clipboard writes.
+function onExportToggle() {
+  if (exportMenu.value?.open && !markdownRequest) {
+    markdownRequest = $fetch<string>(`/api/audits/${auditId.value}/markdown`, { responseType: "text" });
+    markdownRequest.then((text) => {
+      markdownText = text;
+    }, () => {
+      markdownRequest = null;
+    });
+  }
+}
+
+function copyWithSelection(text: string) {
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.append(field);
+  field.select();
+  const copied = document.execCommand("copy");
+  field.remove();
+  return copied;
+}
+
+async function copyMarkdown() {
+  closeExportMenu();
+  exportNotice.value = null;
+  try {
+    const request = markdownRequest ?? $fetch<string>(`/api/audits/${auditId.value}/markdown`, { responseType: "text" });
+    if (markdownText !== null && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(markdownText);
+    }
+    else if (markdownText !== null) {
+      if (!copyWithSelection(markdownText)) {
+        throw new Error("Your browser blocked copying. Use Download instead.");
+      }
+    }
+    else if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+      await navigator.clipboard.write([new ClipboardItem({ "text/plain": request.then(text => new Blob([text], { type: "text/plain" })) })]);
+    }
+    else if (!copyWithSelection(await request)) {
+      throw new Error("Your browser blocked copying. Use Download instead.");
+    }
+    exportNotice.value = { tone: "success", message: "Report copied as Markdown. Paste it into an LLM or a ticket." };
+  }
+  catch (error) {
+    exportNotice.value = { tone: "error", message: getErrorMessage(error, error instanceof Error ? error.message : "Couldn't copy the report.") };
+  }
+}
+
+function onDocumentPointer(event: PointerEvent) {
+  if (exportMenu.value?.open && !exportMenu.value.contains(event.target as Node)) {
+    closeExportMenu();
+  }
+}
+
+function onDocumentKeydown(event: KeyboardEvent) {
+  if (event.key === "Escape" && exportMenu.value?.open) {
+    closeExportMenu();
+    exportMenu.value.querySelector("summary")?.focus();
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("pointerdown", onDocumentPointer);
+  document.addEventListener("keydown", onDocumentKeydown);
+});
+
 onBeforeUnmount(() => {
   if (pollHandle !== undefined) {
     clearInterval(pollHandle);
   }
+  document.removeEventListener("pointerdown", onDocumentPointer);
+  document.removeEventListener("keydown", onDocumentKeydown);
 });
 </script>
 
@@ -611,6 +679,45 @@ onBeforeUnmount(() => {
             {{ stopPending || run.cancelRequested ? 'Stopping…' : 'Stop audit' }}
           </button>
           <template v-else>
+            <details
+              ref="exportMenu"
+              class="menu"
+              @toggle="onExportToggle"
+            >
+              <summary class="btn">
+                <AppIcon name="download" />
+                Export
+                <AppIcon
+                  name="chevron-down"
+                  :size="14"
+                />
+              </summary>
+              <div class="menu-list">
+                <button
+                  type="button"
+                  class="menu-item"
+                  @click="copyMarkdown"
+                >
+                  <AppIcon name="copy" />
+                  <span>
+                    Copy as Markdown
+                    <span class="menu-hint">For an LLM, a ticket or a chat</span>
+                  </span>
+                </button>
+                <a
+                  class="menu-item"
+                  :href="`/api/audits/${auditId}/markdown?download=1`"
+                  download
+                  @click="closeExportMenu"
+                >
+                  <AppIcon name="file-text" />
+                  <span>
+                    Download Markdown
+                    <span class="menu-hint">Saves an .md file</span>
+                  </span>
+                </a>
+              </div>
+            </details>
             <NuxtLink
               class="btn"
               :to="`/websites/${run.websiteId}/settings`"
@@ -635,6 +742,15 @@ onBeforeUnmount(() => {
       </PageHeader>
 
       <div class="stack-lg">
+        <AlertMessage
+          v-if="exportNotice"
+          :tone="exportNotice.tone"
+          dismissible
+          @dismiss="exportNotice = null"
+        >
+          {{ exportNotice.message }}
+        </AlertMessage>
+
         <AlertMessage
           v-if="actionError || rerunError"
           tone="error"
