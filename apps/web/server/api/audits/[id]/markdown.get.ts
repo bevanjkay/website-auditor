@@ -7,8 +7,21 @@ import { createError, defineEventHandler, getQuery, getRouterParam, setHeader } 
 import { requireUser } from "../../../utils/auth.js";
 import { getAuditComparison } from "../../../utils/comparison.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Audit results"],
+    summary: "Export as Markdown",
+    description: "Returns the report as `text/markdown`, including new and fixed issues when there is a previous audit.",
+    security: [{ bearerAuth: ["read"] }],
+    parameters: [
+      { name: "id", in: "path", required: true, schema: { type: "string" } },
+      { name: "download", in: "query", description: "Send any value to receive the report as a file attachment.", schema: { type: "string" } },
+    ],
+  },
+});
+
 export default defineEventHandler(async (event) => {
-  await requireUser(event);
+  await requireUser(event, "read");
   const id = getRouterParam(event, "id");
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: "Audit id is required." });

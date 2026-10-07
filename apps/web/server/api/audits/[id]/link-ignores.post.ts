@@ -6,8 +6,25 @@ import { createError, defineEventHandler, getRouterParam } from "h3";
 import { requireUser } from "../../../utils/auth.js";
 import { readValidatedBody } from "../../../utils/validation.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Audit results"],
+    summary: "Ignore a broken link",
+    description: "Adds the rule to the website's ignored links and drops matching broken links from this audit. Returns `{ linkIgnores }`.",
+    security: [{ bearerAuth: ["websites:write"] }],
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: { $ref: "#/components/schemas/LinkIgnore" },
+        },
+      },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
-  await requireUser(event);
+  await requireUser(event, "websites:write");
   const id = getRouterParam(event, "id");
   const rule = await readValidatedBody(event, linkIgnoreSchema);
 

@@ -51,6 +51,14 @@ const isWebsitesSection = computed(() =>
         Add website
       </NuxtLink>
       <NuxtLink
+        class="sidebar-link"
+        to="/settings/tokens"
+        :aria-current="route.path === '/settings/tokens' ? 'page' : undefined"
+      >
+        <AppIcon name="key" />
+        API tokens
+      </NuxtLink>
+      <NuxtLink
         v-if="user.role === 'admin'"
         class="sidebar-link"
         to="/admin/users"

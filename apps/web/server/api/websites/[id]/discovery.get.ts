@@ -6,8 +6,17 @@ import { createError, defineEventHandler, getRouterParam } from "h3";
 
 import { requireUser } from "../../../utils/auth.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Websites"],
+    summary: "Preview crawl discovery",
+    description: "Reads the website's sitemaps now and returns `{ discovery, allowSuggestions, denySuggestions }` with the saved crawl rules applied.",
+    security: [{ bearerAuth: ["read"] }],
+  },
+});
+
 export default defineEventHandler(async (event) => {
-  await requireUser(event);
+  await requireUser(event, "read");
   const websiteId = getRouterParam(event, "id");
 
   if (!websiteId) {

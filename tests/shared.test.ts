@@ -1,6 +1,6 @@
 import type { ComparableIssue } from "@website-auditor/shared";
 
-import { compareIssueSets, isLinkIgnored, issueComparisonKey, normalizeWebsiteUrl, parseLinkIgnore } from "@website-auditor/shared";
+import { apiTokenScopesForRole, compareIssueSets, createApiTokenSchema, isLinkIgnored, issueComparisonKey, normalizeWebsiteUrl, parseLinkIgnore } from "@website-auditor/shared";
 
 import { describe, expect, it } from "vitest";
 
@@ -78,5 +78,23 @@ describe("link ignores", () => {
     expect(isLinkIgnored("https://example.com/old-page", rules)).toBe(true);
     expect(isLinkIgnored("https://example.com/old-page/#top", rules)).toBe(true);
     expect(isLinkIgnored("https://example.com/old-page/2", rules)).toBe(false);
+  });
+});
+
+describe("aPI token input", () => {
+  it("dedupes scopes and accepts tokens that never expire", () => {
+    expect(createApiTokenSchema.parse({ name: " CI ", scopes: ["read", "read", "audit:run"], expiresInDays: null }))
+      .toEqual({ name: "CI", scopes: ["read", "audit:run"], expiresInDays: null });
+  });
+
+  it("rejects unknown scopes, empty scopes and unsupported expiries", () => {
+    expect(createApiTokenSchema.safeParse({ name: "CI", scopes: ["admin"], expiresInDays: 90 }).success).toBe(false);
+    expect(createApiTokenSchema.safeParse({ name: "CI", scopes: [], expiresInDays: 90 }).success).toBe(false);
+    expect(createApiTokenSchema.safeParse({ name: "CI", scopes: ["read"], expiresInDays: 7 }).success).toBe(false);
+  });
+
+  it("keeps website management to administrators", () => {
+    expect(apiTokenScopesForRole("user")).not.toContain("websites:write");
+    expect(apiTokenScopesForRole("admin")).toContain("websites:write");
   });
 });

@@ -6,6 +6,14 @@ import { createError, defineEventHandler, getRouterParam } from "h3";
 import { requireAdmin } from "../../../utils/auth.js";
 import { readValidatedBody } from "../../../utils/validation.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Users"],
+    summary: "Update a user",
+    description: "Administrators only, from a browser session; API tokens get 403.",
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const admin = await requireAdmin(event);
   const id = getRouterParam(event, "id");

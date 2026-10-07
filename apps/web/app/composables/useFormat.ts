@@ -1,6 +1,7 @@
 const relativeFormatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 const shortDateFormatter = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 
 const relativeSteps: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["second", 60],
@@ -23,6 +24,11 @@ function toDate(value: string | Date | null | undefined) {
 export function formatDateTime(value: string | Date | null | undefined, fallback = "—") {
   const date = toDate(value);
   return date ? dateTimeFormatter.format(date) : fallback;
+}
+
+export function formatDate(value: string | Date | null | undefined, fallback = "—") {
+  const date = toDate(value);
+  return date ? dateFormatter.format(date) : fallback;
 }
 
 export function formatShortDate(value: string | Date | null | undefined, fallback = "—") {

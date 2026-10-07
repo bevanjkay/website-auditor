@@ -1,3 +1,5 @@
+import { version } from "./package.json";
+
 export default defineNuxtConfig({
   srcDir: "app",
   serverDir: "server",
@@ -33,6 +35,23 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    experimental: {
+      openAPI: true,
+    },
+    openAPI: {
+      production: "runtime",
+      meta: {
+        title: "Website Auditor API",
+        description: "Authenticate with an API token from the API tokens page: `Authorization: Bearer wa_…`. The API is unstable before 1.0.",
+        version,
+      },
+      // The bundled Scalar and Swagger pages load scripts from a CDN onto this origin, where they would run with
+      // the signed-in user's session. Point an external client at /_openapi.json instead.
+      ui: {
+        scalar: false,
+        swagger: false,
+      },
+    },
     externals: {
       inline: ["@website-auditor/db", "@website-auditor/shared"],
     },

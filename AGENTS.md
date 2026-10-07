@@ -8,5 +8,7 @@
 - `scripts/compose-smoke.sh` is the only check that starts `docker-compose.yml`; lint, typecheck, test and build all pass on a stack that cannot boot. CI runs it directly, so it needs no Node setup; `pnpm test:compose` is a local alias for the same script.
 
 ## Web app
+- Every API route calls `requireUser(event, scope)` (GET routes use `read`) or the session-only `requireSessionUser`/`requireAdmin`; `tests/api-routes.test.ts` enforces this.
+- Nitro reads `defineRouteMeta` statically, so it must be a top-level call whose argument is pure object, array and primitive literals: constants, template literals and spreads are silently dropped from `/_openapi.json`.
 - `apps/web/tsconfig.json` does not map Nuxt's `~` alias, so `vue-tsc` fails on `~/…` imports; use relative paths for type imports under `app/`.
 - The SPA can be checked visually without Postgres or Redis: run the built `.output/server/index.mjs` with a dummy `DATABASE_URL` and fulfil `/api/**` from fixtures with Playwright route mocking.

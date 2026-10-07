@@ -7,6 +7,14 @@ import { requireAdmin } from "../../../utils/auth.js";
 import { hashPassword } from "../../../utils/security.js";
 import { readValidatedBody } from "../../../utils/validation.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Users"],
+    summary: "Reset a user's password",
+    description: "Administrators only, from a browser session; API tokens get 403.",
+  },
+});
+
 export default defineEventHandler(async (event) => {
   await requireAdmin(event);
   const id = getRouterParam(event, "id");
