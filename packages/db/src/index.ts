@@ -1,4 +1,5 @@
 import type {
+  ApiTokenScope,
   AuditEngineResult,
   AuditRunStatus,
   AuditSummary,
@@ -13,13 +14,14 @@ import type {
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { randomUUID } from "node:crypto";
-import { createEmptyCrawlRules, isLinkIgnored, linkIgnoresSchema, typoAllowlistSchema } from "@website-auditor/shared";
+import { apiTokenScopesSchema, createEmptyCrawlRules, isLinkIgnored, linkIgnoresSchema, typoAllowlistSchema } from "@website-auditor/shared";
 
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import {
+  apiTokens,
   auditEvents,
   auditIssues,
   auditLinks,
@@ -225,6 +227,103 @@ export async function getSessionUser(sessionId: string): Promise<SessionUser | n
 
 export async function deleteSession(sessionId: string) {
   await getDb().delete(sessions).where(eq(sessions.id, sessionId));
+}
+
+const apiTokenLastUsedResolutionMs = 60_000;
+
+function selectApiTokens() {
+  return getDb().select({
+    id: apiTokens.id,
+    userId: apiTokens.userId,
+    username: users.username,
+    ownerIsActive: users.isActive,
+    name: apiTokens.name,
+    prefix: apiTokens.prefix,
+    scopesJson: apiTokens.scopesJson,
+    expiresAt: apiTokens.expiresAt,
+    lastUsedAt: apiTokens.lastUsedAt,
+    revokedAt: apiTokens.revokedAt,
+    createdAt: apiTokens.createdAt,
+  }).from(apiTokens).innerJoin(users, eq(apiTokens.userId, users.id));
+}
+
+function toApiTokenRecord({ scopesJson, ...row }: Awaited<ReturnType<typeof selectApiTokens>>[number]) {
+  return { ...row, scopes: apiTokenScopesSchema.catch([]).parse(scopesJson) };
+}
+
+export async function listApiTokens(userId?: string) {
+  const rows = await selectApiTokens()
+    .where(userId ? eq(apiTokens.userId, userId) : undefined)
+    .orderBy(desc(apiTokens.createdAt));
+  return rows.map(toApiTokenRecord);
+}
+
+export async function getApiToken(id: string) {
+  const [row] = await selectApiTokens().where(eq(apiTokens.id, id));
+  return row ? toApiTokenRecord(row) : null;
+}
+
+export async function createApiToken(input: {
+  userId: string;
+  name: string;
+  prefix: string;
+  tokenHash: string;
+  scopes: ApiTokenScope[];
+  expiresAt: Date | null;
+}) {
+  const id = createId();
+  await getDb().insert(apiTokens).values({
+    id,
+    userId: input.userId,
+    name: input.name,
+    prefix: input.prefix,
+    tokenHash: input.tokenHash,
+    scopesJson: input.scopes,
+    expiresAt: input.expiresAt,
+    createdAt: now(),
+  });
+
+  const token = await getApiToken(id);
+  if (!token) {
+    throw new Error("Failed to create API token.");
+  }
+
+  return token;
+}
+
+export async function revokeApiToken(id: string) {
+  await getDb().update(apiTokens).set({ revokedAt: now() }).where(and(eq(apiTokens.id, id), isNull(apiTokens.revokedAt)));
+}
+
+export async function getApiTokenUser(tokenHash: string): Promise<{ user: SessionUser; scopes: ApiTokenScope[] } | null> {
+  const [record] = await getDb().select({
+    tokenId: apiTokens.id,
+    scopesJson: apiTokens.scopesJson,
+    expiresAt: apiTokens.expiresAt,
+    lastUsedAt: apiTokens.lastUsedAt,
+    revokedAt: apiTokens.revokedAt,
+    id: users.id,
+    username: users.username,
+    role: users.role,
+    isActive: users.isActive,
+  }).from(apiTokens).innerJoin(users, eq(apiTokens.userId, users.id)).where(eq(apiTokens.tokenHash, tokenHash));
+
+  if (!record || !record.isActive || record.revokedAt || (record.expiresAt && record.expiresAt.getTime() < Date.now())) {
+    return null;
+  }
+
+  if (!record.lastUsedAt || Date.now() - record.lastUsedAt.getTime() > apiTokenLastUsedResolutionMs) {
+    await getDb().update(apiTokens).set({ lastUsedAt: now() }).where(eq(apiTokens.id, record.tokenId));
+  }
+
+  return {
+    user: {
+      id: record.id,
+      username: record.username,
+      role: record.role as UserRole,
+    },
+    scopes: apiTokenScopesSchema.catch([]).parse(record.scopesJson),
+  };
 }
 
 const completedRunStatuses = ["completed", "completed_with_limits"];

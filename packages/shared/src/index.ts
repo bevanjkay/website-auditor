@@ -145,6 +145,22 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8).max(200),
 });
 
+export const apiTokenScopes = ["read", "audit:run", "websites:write"] as const;
+export type ApiTokenScope = (typeof apiTokenScopes)[number];
+export const apiTokenScopesSchema = z.array(z.enum(apiTokenScopes));
+export const apiTokenExpiryDays = [30, 90, 365] as const;
+
+// The worker fetches whatever URL a website points at, so only admins can hand that reach to a token.
+export function apiTokenScopesForRole(role: UserRole): readonly ApiTokenScope[] {
+  return role === "admin" ? apiTokenScopes : ["read", "audit:run"];
+}
+
+export const createApiTokenSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  scopes: apiTokenScopesSchema.min(1).transform(scopes => [...new Set(scopes)]),
+  expiresInDays: z.literal(apiTokenExpiryDays).nullable(),
+});
+
 export const summarySchema = z.object({
   completedWithLimits: z.boolean(),
   maxPagesReached: z.boolean(),

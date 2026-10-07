@@ -7,8 +7,17 @@ import { createError, defineEventHandler, getRouterParam } from "h3";
 import { requireUser } from "../../../utils/auth.js";
 import { getAuditQueue } from "../../../utils/queue.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Audits"],
+    summary: "Start an audit",
+    description: "Queues an audit with the website's saved settings and returns `{ auditRun }` straight away. Poll `GET /api/audits/{id}` until `status` is no longer `queued` or `running`.",
+    security: [{ bearerAuth: ["audit:run"] }],
+  },
+});
+
 export default defineEventHandler(async (event) => {
-  const user = await requireUser(event);
+  const user = await requireUser(event, "audit:run");
   const websiteId = getRouterParam(event, "id");
 
   if (!websiteId) {

@@ -51,6 +51,30 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 - Websites are shared across all authenticated users in the installation.
 - Audit history is retained per website for comparison and troubleshooting.
 
+## API
+
+Scripts, CI jobs and MCP clients can use the same HTTP API as the web app with an API token. The API is unstable before 1.0 and may change between releases.
+
+1. Create a token from **API tokens** in the sidebar. It's only shown once, so store it somewhere safe.
+2. Send it as a bearer token, for example to start an audit:
+
+   ```bash
+   curl -X POST -H "Authorization: Bearer $WEBSITE_AUDITOR_TOKEN" \
+     https://auditor.example.com/api/websites/<website-id>/audits
+   ```
+
+3. Poll `GET /api/audits/<audit-id>` until `status` is no longer `queued` or `running`.
+
+Each token is limited to the scopes chosen when it's created:
+
+| Scope | Allows |
+| --- | --- |
+| `read` | Viewing websites, audits and their results |
+| `audit:run` | Starting and stopping audits |
+| `websites:write` | Adding and editing websites, allowing typo words and ignoring broken links (administrators only) |
+
+Tokens act as the user who created them, stop working when that user is disabled, and can't manage users or other tokens. The OpenAPI description is served at `/_openapi.json`.
+
 ## Backups
 
 Persist these volumes:

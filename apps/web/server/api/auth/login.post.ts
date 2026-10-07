@@ -7,6 +7,14 @@ import { startSession } from "../../utils/auth.js";
 import { verifyPassword } from "../../utils/security.js";
 import { readValidatedBody } from "../../utils/validation.js";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Session"],
+    summary: "Sign in",
+    description: "Starts a browser session. Not needed with an API token.",
+  },
+});
+
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, loginSchema);
   const user = await findUserByUsername(body.username);
