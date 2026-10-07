@@ -25,8 +25,8 @@ describe("aPI route access", () => {
     }
   });
 
-  it("keeps user and token management session-only", () => {
-    const management = routes.filter(route => /^(?:users|tokens)\//.test(route.file));
+  it("keeps user, token and settings management session-only", () => {
+    const management = routes.filter(route => /^(?:users|tokens|settings)\//.test(route.file));
 
     expect(management.length).toBeGreaterThan(0);
     expect(management.every(route => route.sessionOnly && route.scope === null)).toBe(true);

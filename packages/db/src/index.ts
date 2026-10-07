@@ -22,6 +22,7 @@ import { Pool } from "pg";
 
 import {
   apiTokens,
+  appSettings,
   auditEvents,
   auditIssues,
   auditLinks,
@@ -227,6 +228,20 @@ export async function getSessionUser(sessionId: string): Promise<SessionUser | n
 
 export async function deleteSession(sessionId: string) {
   await getDb().delete(sessions).where(eq(sessions.id, sessionId));
+}
+
+export async function getAppSetting(key: string) {
+  const [setting] = await getDb().select({
+    valueJson: appSettings.valueJson,
+    updatedAt: appSettings.updatedAt,
+    updatedByUsername: users.username,
+  }).from(appSettings).leftJoin(users, eq(appSettings.updatedByUserId, users.id)).where(eq(appSettings.key, key));
+  return setting ?? null;
+}
+
+export async function setAppSetting(key: string, value: unknown, userId: string) {
+  const changes = { valueJson: value, updatedByUserId: userId, updatedAt: now() };
+  await getDb().insert(appSettings).values({ key, ...changes }).onConflictDoUpdate({ target: appSettings.key, set: changes });
 }
 
 const apiTokenLastUsedResolutionMs = 60_000;
@@ -481,6 +496,26 @@ export async function updateWebsite(
   return website ?? null;
 }
 
+export class ActiveAuditRunError extends Error {
+  constructor(readonly auditRunId: string) {
+    super("An audit is already queued or running for this website.");
+  }
+}
+
+// A run with a stop request no longer blocks: if its worker died, nothing else would ever clear it.
+function activeAuditRunFilter(websiteId: string) {
+  return and(
+    eq(auditRuns.websiteId, websiteId),
+    inArray(auditRuns.status, ["queued", "running"]),
+    eq(auditRuns.cancelRequested, false),
+  );
+}
+
+export async function getActiveAuditRun(websiteId: string) {
+  const [run] = await getDb().select({ id: auditRuns.id, status: auditRuns.status }).from(auditRuns).where(activeAuditRunFilter(websiteId)).limit(1);
+  return run ?? null;
+}
+
 export async function createAuditRun(input: {
   websiteId: string;
   triggeredByUserId: string;
@@ -491,31 +526,39 @@ export async function createAuditRun(input: {
   lighthouseTargets?: LighthouseTargets;
   linkIgnores?: LinkIgnore[];
 }) {
-  const [run] = await getDb().insert(auditRuns).values({
-    id: createId(),
-    websiteId: input.websiteId,
-    triggeredByUserId: input.triggeredByUserId,
-    status: "queued",
-    cancelRequested: false,
-    typoLanguage: input.typoLanguage ?? "en",
-    typoAllowlistJson: input.typoAllowlist ?? [],
-    crawlRulesJson: input.crawlRules ?? createEmptyCrawlRules(),
-    lighthouseTargetsJson: input.lighthouseTargets ?? [],
-    linkIgnoresJson: input.linkIgnores ?? [],
-    discoveryJson: input.discovery ?? {},
-    summaryJson: {},
-  }).returning();
+  return getDb().transaction(async (tx) => {
+    await tx.select({ id: websites.id }).from(websites).where(eq(websites.id, input.websiteId)).for("update");
+    const [active] = await tx.select({ id: auditRuns.id }).from(auditRuns).where(activeAuditRunFilter(input.websiteId)).limit(1);
+    if (active) {
+      throw new ActiveAuditRunError(active.id);
+    }
 
-  if (!run) {
-    throw new Error("Failed to create audit run.");
-  }
+    const [run] = await tx.insert(auditRuns).values({
+      id: createId(),
+      websiteId: input.websiteId,
+      triggeredByUserId: input.triggeredByUserId,
+      status: "queued",
+      cancelRequested: false,
+      typoLanguage: input.typoLanguage ?? "en",
+      typoAllowlistJson: input.typoAllowlist ?? [],
+      crawlRulesJson: input.crawlRules ?? createEmptyCrawlRules(),
+      lighthouseTargetsJson: input.lighthouseTargets ?? [],
+      linkIgnoresJson: input.linkIgnores ?? [],
+      discoveryJson: input.discovery ?? {},
+      summaryJson: {},
+    }).returning();
 
-  await getDb().update(websites).set({
-    lastAuditRunId: run.id,
-    updatedAt: now(),
-  }).where(eq(websites.id, input.websiteId));
+    if (!run) {
+      throw new Error("Failed to create audit run.");
+    }
 
-  return run;
+    await tx.update(websites).set({
+      lastAuditRunId: run.id,
+      updatedAt: now(),
+    }).where(eq(websites.id, input.websiteId));
+
+    return run;
+  });
 }
 
 export async function listAuditRunsForWebsite(websiteId: string) {
@@ -579,12 +622,19 @@ export async function getAuditRun(id: string) {
   return run ?? null;
 }
 
-export async function markAuditRunStatus(runId: string, status: AuditRunStatus) {
-  const values = status === "running"
-    ? { status, startedAt: now(), cancelRequested: false }
-    : { status };
+// Refuses a run that was stopped while the worker was picking up its job. A running run may start again because
+// BullMQ retries a job whose worker stalled.
+export async function startAuditRun(runId: string): Promise<boolean> {
+  const started = await getDb().update(auditRuns).set({
+    status: "running",
+    startedAt: now(),
+  }).where(and(
+    eq(auditRuns.id, runId),
+    inArray(auditRuns.status, ["queued", "running"]),
+    eq(auditRuns.cancelRequested, false),
+  )).returning({ id: auditRuns.id });
 
-  await getDb().update(auditRuns).set(values).where(eq(auditRuns.id, runId));
+  return started.length > 0;
 }
 
 export async function requestAuditRunCancellation(runId: string) {
@@ -606,17 +656,14 @@ export async function requestAuditRunCancellation(runId: string) {
   const [updatedRun] = await getDb().update(auditRuns).set({
     cancelRequested: true,
     summaryJson,
-  }).where(eq(auditRuns.id, runId)).returning();
+  }).where(and(eq(auditRuns.id, runId), inArray(auditRuns.status, ["queued", "running"]))).returning();
 
   return updatedRun ?? null;
 }
 
-export async function cancelAuditRun(runId: string, message: string) {
-  await appendAuditEvent(runId, {
-    level: "warning",
-    message,
-  });
-
+// Pass `fromStatuses` when the run may have moved on since it was read, so a run that finished in the meantime isn't
+// rewritten as cancelled.
+export async function cancelAuditRun(runId: string, message: string, fromStatuses?: AuditRunStatus[]): Promise<boolean> {
   const [run] = await getDb().select({
     summaryJson: auditRuns.summaryJson,
   }).from(auditRuns).where(eq(auditRuns.id, runId)).limit(1);
@@ -628,12 +675,25 @@ export async function cancelAuditRun(runId: string, message: string) {
     },
   });
 
-  await getDb().update(auditRuns).set({
+  const cancelled = await getDb().update(auditRuns).set({
     status: "cancelled",
     cancelRequested: false,
     finishedAt: now(),
     summaryJson,
-  }).where(eq(auditRuns.id, runId));
+  }).where(and(
+    eq(auditRuns.id, runId),
+    fromStatuses ? inArray(auditRuns.status, fromStatuses) : undefined,
+  )).returning({ id: auditRuns.id });
+
+  if (cancelled.length === 0) {
+    return false;
+  }
+
+  await appendAuditEvent(runId, {
+    level: "warning",
+    message,
+  });
+  return true;
 }
 
 export async function failAuditRun(runId: string, message: string) {

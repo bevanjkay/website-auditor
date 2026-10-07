@@ -20,12 +20,6 @@ interface TokenRow {
   createdAt: string;
 }
 
-const scopeOptions: Array<{ scope: ApiTokenScope; label: string; hint: string }> = [
-  { scope: "read", label: "Read", hint: "View websites, audits and their results." },
-  { scope: "audit:run", label: "Run audits", hint: "Start and stop audits." },
-  { scope: "websites:write", label: "Manage websites", hint: "Add and edit websites, allow typo words and ignore broken links." },
-];
-
 const expiryOptions = [
   { value: 30, label: "30 days" },
   { value: 90, label: "90 days" },
@@ -37,7 +31,7 @@ const { user: currentUser } = useSessionState();
 const isAdmin = computed(() => currentUser.value?.role === "admin");
 const grantableOptions = computed(() => {
   const allowed = currentUser.value ? apiTokenScopesForRole(currentUser.value.role) : [];
-  return scopeOptions.filter(option => allowed.includes(option.scope));
+  return apiTokenScopeOptions.filter(option => allowed.includes(option.scope));
 });
 const origin = useRequestURL().origin;
 
@@ -61,7 +55,7 @@ const tokens = computed(() => [...(data.value?.tokens ?? [])].sort((left, right)
 const activeCount = computed(() => tokens.value.filter(token => tokenStatus(token).label === "Active").length);
 
 function scopeLabels(scopes: ApiTokenScope[]) {
-  return scopeOptions.filter(option => scopes.includes(option.scope)).map(option => option.label).join(", ");
+  return apiTokenScopeOptions.filter(option => scopes.includes(option.scope)).map(option => option.label).join(", ");
 }
 
 const form = reactive<{ name: string; scopes: ApiTokenScope[]; expiresInDays: number | null }>({
@@ -191,7 +185,10 @@ async function revoke(token: TokenRow) {
               aria-live="polite"
             >
               <template v-if="copyState === 'blocked'">Your browser blocked copying. The token is selected, so press Ctrl+C or ⌘C.</template>
-              <template v-else>Send it in the Authorization header, for example <code>curl -H "Authorization: Bearer $TOKEN" {{ origin }}/api/websites</code></template>
+              <template v-else>
+                Send it in the Authorization header, for example <code>curl -H "Authorization: Bearer $TOKEN" {{ origin }}/api/websites</code>,
+                or <NuxtLink to="/settings/mcp">set up an MCP client</NuxtLink> with it.
+              </template>
             </span>
           </div>
         </div>

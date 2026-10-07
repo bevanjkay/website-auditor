@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+export * from "./mcp.js";
 export * from "./report.js";
 
 export const userRoles = ["admin", "user"] as const;
@@ -154,6 +155,10 @@ export const apiTokenExpiryDays = [30, 90, 365] as const;
 export function apiTokenScopesForRole(role: UserRole): readonly ApiTokenScope[] {
   return role === "admin" ? apiTokenScopes : ["read", "audit:run"];
 }
+
+export const mcpSettingsSchema = z.object({
+  enabled: z.boolean(),
+});
 
 export const createApiTokenSchema = z.object({
   name: z.string().trim().min(1).max(100),

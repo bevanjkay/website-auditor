@@ -4,7 +4,7 @@ import { getApiTokenUser, getSessionUser } from "@website-auditor/db";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requireAdmin, requireSessionUser, requireUser } from "../apps/web/server/utils/auth";
+import { requireAdmin, requireApiToken, requireSessionUser, requireUser } from "../apps/web/server/utils/auth";
 
 vi.mock("@website-auditor/db", () => ({
   createSession: vi.fn(),
@@ -17,9 +17,10 @@ const member: SessionUser = { id: "user-1", username: "sam", role: "user" };
 const admin: SessionUser = { id: "user-2", username: "alex", role: "admin" };
 const validToken = `wa_${"a".repeat(43)}`;
 
-// The auth helpers only read request headers, so a bare event is enough.
-function requestWith(headers: Record<string, string>) {
-  return { node: { req: { headers } } } as unknown as Parameters<typeof requireUser>[0];
+// The auth helpers only touch request and response headers, so a bare event is enough.
+function requestWith(headers: Record<string, string>, responseHeaders: Record<string, string> = {}) {
+  const res = { setHeader: (name: string, value: string) => void (responseHeaders[name] = value) };
+  return { node: { req: { headers }, res } } as unknown as Parameters<typeof requireUser>[0];
 }
 
 function tokenFor(user: SessionUser, scopes: ApiTokenScope[]) {
@@ -74,5 +75,23 @@ describe("session-only endpoints", () => {
   it("still accept a browser session", async () => {
     vi.mocked(getSessionUser).mockResolvedValue(admin);
     await expect(requireAdmin(requestWith({ cookie: "wa_session=abc" }))).resolves.toEqual(admin);
+  });
+});
+
+describe("requireApiToken", () => {
+  it("asks for a bearer token and ignores the session cookie", async () => {
+    const responseHeaders: Record<string, string> = {};
+
+    await expect(requireApiToken(requestWith({ cookie: "wa_session=abc" }, responseHeaders))).rejects.toMatchObject({ statusCode: 401 });
+    expect(responseHeaders).toEqual({ "www-authenticate": "Bearer" });
+    expect(getSessionUser).not.toHaveBeenCalled();
+  });
+
+  it("returns the token with the scopes its owner's role still allows", async () => {
+    await expect(requireApiToken(tokenFor(member, ["read", "websites:write"]))).resolves.toEqual({
+      user: member,
+      scopes: ["read"],
+      token: validToken,
+    });
   });
 });

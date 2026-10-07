@@ -177,7 +177,8 @@ async function runAudit(row: { id: string; name: string }) {
   }
   catch (error) {
     const message = getErrorMessage(error, `Couldn't start an audit for ${row.name}.`);
-    notice.value = { tone: "error", message, settingsFor: message.includes("crawl rules") ? row.id : undefined };
+    const activeAuditId = (error as { data?: { data?: { auditRunId?: string } } }).data?.data?.auditRunId;
+    notice.value = { tone: "error", message, auditId: activeAuditId, settingsFor: message.includes("crawl rules") ? row.id : undefined };
   }
   finally {
     setPending(row.id, false);

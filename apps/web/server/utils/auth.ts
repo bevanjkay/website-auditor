@@ -2,7 +2,7 @@ import type { ApiTokenScope, SessionUser } from "@website-auditor/shared";
 
 import { createSession, deleteSession, getApiTokenUser, getSessionUser } from "@website-auditor/db";
 import { apiTokenScopesForRole } from "@website-auditor/shared";
-import { createError, deleteCookie, getCookie, getHeader, setCookie } from "h3";
+import { createError, deleteCookie, getCookie, getHeader, setCookie, setResponseHeader } from "h3";
 
 import { hashApiToken, isApiTokenFormat, parseBearerToken } from "./security.js";
 
@@ -22,12 +22,22 @@ type RequestAuth
   = | { kind: "session"; user: SessionUser }
     | { kind: "token"; user: SessionUser; scopes: ApiTokenScope[] };
 
+async function resolveApiToken(token: string) {
+  const record = isApiTokenFormat(token) ? await getApiTokenUser(hashApiToken(token)) : null;
+  if (!record) {
+    return null;
+  }
+
+  const allowedScopes = apiTokenScopesForRole(record.user.role);
+  return { user: record.user, scopes: record.scopes.filter(scope => allowedScopes.includes(scope)) };
+}
+
 // A bearer token never falls back to the session cookie, so a bad token fails rather than riding a browser
 // session. Other schemes are ignored because a reverse proxy in front of the app may forward its own Basic auth.
 async function authenticate(event: Parameters<typeof getCookie>[0]): Promise<RequestAuth> {
   const bearer = parseBearerToken(getHeader(event, "authorization"));
   if (bearer !== null) {
-    const record = isApiTokenFormat(bearer) ? await getApiTokenUser(hashApiToken(bearer)) : null;
+    const record = await resolveApiToken(bearer);
     if (!record) {
       throw createError({
         statusCode: 401,
@@ -35,8 +45,7 @@ async function authenticate(event: Parameters<typeof getCookie>[0]): Promise<Req
       });
     }
 
-    const allowedScopes = apiTokenScopesForRole(record.user.role);
-    return { kind: "token", user: record.user, scopes: record.scopes.filter(scope => allowedScopes.includes(scope)) };
+    return { kind: "token", ...record };
   }
 
   const user = await getSessionUserFromEvent(event);
@@ -61,6 +70,21 @@ export async function requireUser(event: Parameters<typeof getCookie>[0], scope:
   }
 
   return auth.user;
+}
+
+export async function requireApiToken(event: Parameters<typeof getCookie>[0]) {
+  const token = parseBearerToken(getHeader(event, "authorization"));
+  const record = token ? await resolveApiToken(token) : null;
+
+  if (!token || !record) {
+    setResponseHeader(event, "www-authenticate", "Bearer");
+    throw createError({
+      statusCode: 401,
+      statusMessage: token ? "Invalid, expired or revoked API token." : "An API token is required.",
+    });
+  }
+
+  return { ...record, token };
 }
 
 export async function requireSessionUser(event: Parameters<typeof getCookie>[0]): Promise<SessionUser> {

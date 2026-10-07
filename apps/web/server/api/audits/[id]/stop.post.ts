@@ -47,22 +47,16 @@ export default defineEventHandler(async (event) => {
 
   if (auditRun.status === "queued") {
     const job = await getAuditQueue().getJob(auditRun.id);
-    try {
-      await job?.remove();
+    // remove() throws once a worker has claimed the job; that worker then honours the cancellation request below.
+    const removed = await (job?.remove() ?? Promise.resolve()).then(() => true, () => false);
+    if (removed && await cancelAuditRun(auditRun.id, "Audit stopped before execution started.", ["queued"])) {
+      return {
+        auditRun: await getAuditRun(auditRun.id),
+      };
     }
-    catch {
-      // If the worker has already claimed the job, the persisted cancelled state
-      // still causes the worker to exit before doing useful work.
-    }
-    await cancelAuditRun(auditRun.id, "Audit stopped before execution started.");
-
-    return {
-      auditRun: await getAuditRun(auditRun.id),
-    };
   }
 
-  if (!auditRun.cancelRequested) {
-    await requestAuditRunCancellation(auditRun.id);
+  if (!auditRun.cancelRequested && await requestAuditRunCancellation(auditRun.id)) {
     await appendAuditEvent(auditRun.id, {
       level: "warning",
       message: "Audit stop requested",

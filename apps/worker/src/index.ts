@@ -7,7 +7,7 @@ import {
   failAuditRun,
   getAuditRun,
   getWebsiteById,
-  markAuditRunStatus,
+  startAuditRun,
   updateAuditRunProgress,
 } from "@website-auditor/db";
 import {
@@ -78,7 +78,14 @@ const worker = new Worker<AuditJobPayload>(
       };
     }
 
-    await markAuditRunStatus(run.id, "running");
+    if (!(await startAuditRun(run.id))) {
+      await cancelAuditRun(run.id, "Audit cancelled before execution started.", ["queued", "running"]);
+      return {
+        status: "cancelled",
+        skipped: true,
+      };
+    }
+
     await appendAuditEvent(run.id, {
       level: "info",
       message: "Worker accepted audit job",

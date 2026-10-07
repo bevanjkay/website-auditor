@@ -59,6 +59,14 @@ const isWebsitesSection = computed(() =>
         API tokens
       </NuxtLink>
       <NuxtLink
+        class="sidebar-link"
+        to="/settings/mcp"
+        :aria-current="route.path === '/settings/mcp' ? 'page' : undefined"
+      >
+        <AppIcon name="plug" />
+        MCP server
+      </NuxtLink>
+      <NuxtLink
         v-if="user.role === 'admin'"
         class="sidebar-link"
         to="/admin/users"

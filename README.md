@@ -43,6 +43,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 - `AUDIT_PAGE_TIMEOUT_MS`: Page render timeout in milliseconds.
 - `AUDIT_BROWSER_CONCURRENCY`: Concurrent browser page renders.
 - `AUDIT_LINK_CONCURRENCY`: Concurrent link checks.
+- `MCP_DISABLED`: Set to `true` to turn the MCP server off entirely, so administrators can't turn it on in the web app.
 
 ## Notes
 
@@ -63,7 +64,7 @@ Scripts, CI jobs and MCP clients can use the same HTTP API as the web app with a
      https://auditor.example.com/api/websites/<website-id>/audits
    ```
 
-3. Poll `GET /api/audits/<audit-id>` until `status` is no longer `queued` or `running`.
+3. Poll `GET /api/audits/<audit-id>` until `status` is no longer `queued` or `running`. Starting another audit for the same website responds `409` until then.
 
 Each token is limited to the scopes chosen when it's created:
 
@@ -74,6 +75,19 @@ Each token is limited to the scopes chosen when it's created:
 | `websites:write` | Adding and editing websites, allowing typo words and ignoring broken links (administrators only) |
 
 Tokens act as the user who created them, stop working when that user is disabled, and can't manage users or other tokens. The OpenAPI description is served at `/_openapi.json`.
+
+## MCP server
+
+The web service includes an [MCP](https://modelcontextprotocol.io) server at `/mcp`, so AI assistants such as Claude Code can look up results, start audits and clear false positives. It's off until an administrator turns it on from **MCP server** in the sidebar, which also has setup instructions for Claude Code, Claude Desktop, Cursor, VS Code and Codex.
+
+Clients authenticate with an API token and only see the tools its scopes allow. For example, with Claude Code:
+
+```bash
+claude mcp add --transport http --scope user website-auditor https://auditor.example.com/mcp \
+  --header "Authorization: Bearer $WEBSITE_AUDITOR_TOKEN"
+```
+
+Clients that can only sign in with OAuth, such as claude.ai connectors, aren't supported yet.
 
 ## Backups
 
