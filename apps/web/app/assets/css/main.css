@@ -222,6 +222,13 @@ code {
   overflow-wrap: anywhere;
 }
 
+pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+}
+
 pre {
   margin: 0;
   padding: var(--space-3);
@@ -1004,6 +1011,78 @@ legend {
 .input-with-action input {
   flex: 1;
   min-width: 0;
+}
+
+.code-snippet {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.code-snippet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.code-snippet pre {
+  border: 0;
+  border-radius: 0;
+  white-space: pre;
+  word-break: normal;
+}
+
+.setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 0;
+  list-style: none;
+  counter-reset: setup-step;
+}
+
+.setup-steps > li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding-left: var(--space-10);
+  counter-increment: setup-step;
+}
+
+.setup-steps > li::before {
+  content: counter(setup-step);
+  position: absolute;
+  top: -3px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.setup-steps p {
+  color: var(--text-secondary);
+}
+
+.setup-scopes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  color: var(--text-secondary);
 }
 
 .form-grid {

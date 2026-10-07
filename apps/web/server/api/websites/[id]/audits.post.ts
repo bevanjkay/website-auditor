@@ -1,6 +1,6 @@
 import { buildDiscoveryPreview, discoverAuditCandidates } from "@website-auditor/audit-engine";
 
-import { createAuditRun, getWebsiteById } from "@website-auditor/db";
+import { ActiveAuditRunError, createAuditRun, getActiveAuditRun, getWebsiteById } from "@website-auditor/db";
 import { crawlRulesSchema, lighthouseTargetsSchema, linkIgnoresSchema, typoAllowlistSchema, typoLanguageSchema } from "@website-auditor/shared";
 import { createError, defineEventHandler, getRouterParam } from "h3";
 
@@ -11,10 +11,18 @@ defineRouteMeta({
   openAPI: {
     tags: ["Audits"],
     summary: "Start an audit",
-    description: "Queues an audit with the website's saved settings and returns `{ auditRun }` straight away. Poll `GET /api/audits/{id}` until `status` is no longer `queued` or `running`.",
+    description: "Queues an audit with the website's saved settings and returns `{ auditRun }` straight away. Poll `GET /api/audits/{id}` until `status` is no longer `queued` or `running`. Responds 409 with `data.auditRunId` while another audit for the website is queued or running.",
     security: [{ bearerAuth: ["audit:run"] }],
   },
 });
+
+function activeAuditConflict(auditRunId: string) {
+  return createError({
+    statusCode: 409,
+    statusMessage: "An audit is already queued or running for this website.",
+    data: { auditRunId },
+  });
+}
 
 export default defineEventHandler(async (event) => {
   const user = await requireUser(event, "audit:run");
@@ -40,6 +48,11 @@ export default defineEventHandler(async (event) => {
       statusCode: 409,
       statusMessage: "This website is archived. Restore it before running an audit.",
     });
+  }
+
+  const activeRun = await getActiveAuditRun(websiteId);
+  if (activeRun) {
+    throw activeAuditConflict(activeRun.id);
   }
 
   const crawlRules = crawlRulesSchema.parse(website.crawlRulesJson ?? {});
@@ -68,6 +81,8 @@ export default defineEventHandler(async (event) => {
     discovery,
     lighthouseTargets,
     linkIgnores,
+  }).catch((error: unknown) => {
+    throw error instanceof ActiveAuditRunError ? activeAuditConflict(error.auditRunId) : error;
   });
 
   await getAuditQueue().add(run.id, {
