@@ -1,6 +1,6 @@
 import type { ComparableIssue } from "@website-auditor/shared";
 
-import { apiTokenScopesForRole, compareIssueSets, createApiTokenSchema, isLinkIgnored, issueComparisonKey, normalizeWebsiteUrl, parseLinkIgnore } from "@website-auditor/shared";
+import { apiTokenScopesForRole, brokenResourceFields, compareIssueSets, createApiTokenSchema, isLinkIgnored, issueComparisonKey, linkIgnoreRequestSchema, normalizeWebsiteUrl, parseLinkIgnore, withoutIgnoredResources } from "@website-auditor/shared";
 
 import { describe, expect, it } from "vitest";
 
@@ -96,5 +96,47 @@ describe("aPI token input", () => {
   it("keeps website management to administrators", () => {
     expect(apiTokenScopesForRole("user")).not.toContain("websites:write");
     expect(apiTokenScopesForRole("admin")).toContain("websites:write");
+  });
+});
+
+describe("failed resources", () => {
+  const script = (url: string, status: number | null = 502) => ({ url, status, type: "script" });
+  const issue = (resources: ReturnType<typeof script>[]) => ({
+    pageUrl: "https://site.test/forms",
+    category: "broken_link" as const,
+    code: "broken_resource",
+    title: "Resources failed to load",
+    ...brokenResourceFields("https://site.test/forms", resources),
+  });
+
+  it("is an error only when the page's own host fails", () => {
+    expect(brokenResourceFields("https://site.test/", [script("https://cdn.other.test/a.js")]).severity).toBe("warning");
+    expect(brokenResourceFields("https://site.test/", [script("https://cdn.other.test/a.js"), script("https://site.test/app.js", 404)])).toMatchObject({
+      severity: "error",
+      message: "2 resources failed to load: https://cdn.other.test/a.js (502), https://site.test/app.js (404)",
+    });
+  });
+
+  it("drops ignored resources and rebuilds what's left", () => {
+    const own = script("https://site.test/app.js", 404);
+    const embed = script("https://embeds.fluro.test/chunk.js");
+    const [kept] = withoutIgnoredResources([issue([own, embed])], [{ kind: "domain", value: "fluro.test" }]);
+
+    expect(kept).toMatchObject({ severity: "error", message: "1 resource failed to load: https://site.test/app.js (404)", evidence: { resources: [own] } });
+    expect(withoutIgnoredResources([issue([embed])], [{ kind: "url", value: "https://embeds.fluro.test/chunk.js" }])).toEqual([]);
+  });
+
+  it("leaves other issues and unmatched resources alone", () => {
+    const untouched = issue([script("https://cdn.other.test/a.js")]);
+    const typo = { category: "typo" as const, code: "possible_typos", severity: "warning" as const, title: "Typos", message: "teh" };
+    expect(withoutIgnoredResources([untouched, typo], [{ kind: "domain", value: "fluro.test" }])).toEqual([untouched, typo]);
+  });
+});
+
+describe("link ignore requests", () => {
+  it("save to the website unless asked to dismiss for one audit", () => {
+    expect(linkIgnoreRequestSchema.parse({ kind: "domain", value: "fluro.site" }).scope).toBe("website");
+    expect(linkIgnoreRequestSchema.parse({ kind: "url", value: "https://a.test/x.js", scope: "audit" }).scope).toBe("audit");
+    expect(linkIgnoreRequestSchema.safeParse({ kind: "url", value: "https://a.test/x.js", scope: "forever" }).success).toBe(false);
   });
 });

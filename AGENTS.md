@@ -12,5 +12,6 @@
 - Every API route calls `requireUser(event, scope)` (GET routes use `read`) or the session-only `requireSessionUser`/`requireAdmin`; `tests/api-routes.test.ts` enforces this.
 - MCP tools in `apps/web/server/mcp` call the REST routes in-process with the caller's token, so scopes are enforced in one place. List every tool in `mcpTools` (`packages/shared/src/mcp.ts`); `tests/mcp.test.ts` checks it against what's registered.
 - Nitro reads `defineRouteMeta` statically, so it must be a top-level call whose argument is pure object, array and primitive literals: constants, template literals and spreads are silently dropped from `/_openapi.json`.
+- The web build bundles the compiled `packages/*/dist`, not their source, so after changing a shared package run the workspace `pnpm build`; `pnpm --filter @website-auditor/web build` alone fails with a missing export or ships stale code.
 - `apps/web/tsconfig.json` does not map Nuxt's `~` alias, so `vue-tsc` fails on `~/…` imports; use relative paths for type imports under `app/`.
 - The SPA can be checked visually without Postgres or Redis: run the built `.output/server/index.mjs` with a dummy `DATABASE_URL` and fulfil `/api/**` from fixtures with Playwright route mocking.

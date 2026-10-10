@@ -7,6 +7,7 @@ import type {
   DiscoveryPreview,
   LighthouseTargets,
   LinkIgnore,
+  LinkIgnoreScope,
   SessionUser,
   TypoLanguage,
   UserRole,
@@ -14,7 +15,7 @@ import type {
 
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { randomUUID } from "node:crypto";
-import { apiTokenScopesSchema, createEmptyCrawlRules, isLinkIgnored, linkIgnoresSchema, typoAllowlistSchema } from "@website-auditor/shared";
+import { apiTokenScopesSchema, brokenResourceFields, createEmptyCrawlRules, failedResourcesFromEvidence, isLinkIgnored, linkIgnoresSchema, typoAllowlistSchema } from "@website-auditor/shared";
 
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -1071,6 +1072,7 @@ export async function ignoreBrokenLinkForWebsiteAndRun(input: {
   websiteId: string;
   runId: string;
   rule: LinkIgnore;
+  scope?: LinkIgnoreScope;
 }) {
   const [website] = await getDb().select({ linkIgnoresJson: websites.linkIgnoresJson }).from(websites).where(eq(websites.id, input.websiteId)).limit(1);
   const [run] = await getDb().select({
@@ -1086,10 +1088,13 @@ export async function ignoreBrokenLinkForWebsiteAndRun(input: {
     const rules = linkIgnoresSchema.parse(current ?? []);
     return rules.some(rule => rule.kind === input.rule.kind && rule.value === input.rule.value) ? rules : [...rules, input.rule];
   };
-  const linkIgnores = withRule(website?.linkIgnoresJson);
+  const runLinkIgnores = withRule(run?.linkIgnoresJson);
+  const linkIgnores = input.scope === "audit" ? runLinkIgnores : withRule(website?.linkIgnoresJson);
 
-  await getDb().update(websites).set({ linkIgnoresJson: linkIgnores, updatedAt: now() }).where(eq(websites.id, input.websiteId));
-  await getDb().update(auditRuns).set({ linkIgnoresJson: withRule(run?.linkIgnoresJson) }).where(eq(auditRuns.id, input.runId));
+  if (input.scope !== "audit") {
+    await getDb().update(websites).set({ linkIgnoresJson: linkIgnores, updatedAt: now() }).where(eq(websites.id, input.websiteId));
+  }
+  await getDb().update(auditRuns).set({ linkIgnoresJson: runLinkIgnores }).where(eq(auditRuns.id, input.runId));
 
   if (!run || run.status === "queued" || run.status === "running") {
     return { linkIgnores };
@@ -1103,6 +1108,22 @@ export async function ignoreBrokenLinkForWebsiteAndRun(input: {
 
   const brokenLinkIssues = await getDb().select({ id: auditIssues.id, message: auditIssues.message, evidenceJson: auditIssues.evidenceJson }).from(auditIssues).where(and(eq(auditIssues.auditRunId, input.runId), eq(auditIssues.code, "broken_link")));
   const ignoredIssueIds = brokenLinkIssues.filter(issue => isLinkIgnored(brokenLinkTarget(issue), [input.rule])).map(issue => issue.id);
+
+  const resourceIssues = await getDb().select({ id: auditIssues.id, evidenceJson: auditIssues.evidenceJson, pageUrl: auditPages.url }).from(auditIssues).leftJoin(auditPages, eq(auditIssues.pageId, auditPages.id)).where(and(eq(auditIssues.auditRunId, input.runId), eq(auditIssues.code, "broken_resource")));
+  for (const issue of resourceIssues) {
+    const resources = failedResourcesFromEvidence(issue.evidenceJson);
+    const remaining = resources.filter(resource => !isLinkIgnored(resource.url, [input.rule]));
+    if (remaining.length === resources.length || !issue.pageUrl) {
+      continue;
+    }
+    if (remaining.length === 0) {
+      ignoredIssueIds.push(issue.id);
+      continue;
+    }
+    const { severity, message, evidence } = brokenResourceFields(issue.pageUrl, remaining);
+    await getDb().update(auditIssues).set({ severity, message, evidenceJson: evidence }).where(eq(auditIssues.id, issue.id));
+  }
+
   if (ignoredIssueIds.length) {
     await getDb().delete(auditIssues).where(inArray(auditIssues.id, ignoredIssueIds));
   }

@@ -13,6 +13,7 @@ import type {
   DiscoveryPreview,
   DiscoverySource,
   DiscoverySourceMode,
+  FailedResource,
   LighthouseTargets,
   LinkIgnore,
   TypoLanguage,
@@ -20,7 +21,7 @@ import type {
 
 import { createHash } from "node:crypto";
 import { connect as connectTls } from "node:tls";
-import { createEmptyCrawlRules, isLinkIgnored } from "@website-auditor/shared";
+import { brokenResourceFields, createEmptyCrawlRules, isLinkIgnored, withoutIgnoredResources } from "@website-auditor/shared";
 import { launch } from "chrome-launcher";
 import dictionary from "dictionary-en";
 import dictionaryAu from "dictionary-en-au";
@@ -125,7 +126,7 @@ export interface ExtractedPage {
   hasViewport: boolean;
   headingLevels: number[];
   insecureResources: string[];
-  failedResources: Array<{ url: string; status: number | null; type: string }>;
+  failedResources: FailedResource[];
   scriptErrors: string[];
 }
 
@@ -1167,13 +1168,54 @@ export async function detectTypos(
   });
 }
 
+const transientNetworkError = /ERR_(?:CONNECTION_RESET|CONNECTION_CLOSED|EMPTY_RESPONSE|TIMED_OUT|NETWORK_CHANGED|HTTP2_PROTOCOL_ERROR|QUIC_PROTOCOL_ERROR)/;
+
+// Browser-side blocks (ORB, CSP, mixed content) are not temporary: a plain request would load the resource even though
+// visitors' browsers refuse it.
+export function isTemporaryResourceFailure(resource: FailedResource): boolean {
+  return resource.status === null
+    ? transientNetworkError.test(resource.error ?? "")
+    : resource.status === 429 || resource.status >= 500;
+}
+
+// Every page loads in a fresh browser, so a site with third-party embeds sends bursts of uncached requests that can
+// trip the embed host's rate limits. A temporary failure only counts once a second request fails too. One failed retry
+// marks its host as still down, so a hung host costs one timeout per page rather than one per resource.
+export async function recheckTemporaryFailures(
+  resources: FailedResource[],
+  fetchStatus: (url: string) => Promise<number>,
+  delayMs = 1000,
+): Promise<FailedResource[]> {
+  if (!resources.some(isTemporaryResourceFailure)) {
+    return resources;
+  }
+
+  await new Promise(resolve => setTimeout(resolve, delayMs));
+  const limit = pLimit(4);
+  const failingHosts = new Set<string>();
+  const rechecked = await Promise.all(resources.map(resource => limit(async () => {
+    const host = hostOf(resource.url, resource.url) ?? resource.url;
+    if (!isTemporaryResourceFailure(resource) || failingHosts.has(host)) {
+      return resource;
+    }
+    const status = await fetchStatus(resource.url).catch(() => null);
+    if (status !== null && status < 400) {
+      return null;
+    }
+    failingHosts.add(host);
+    return status === null ? resource : { ...resource, status };
+  })));
+
+  return rechecked.filter((resource): resource is FailedResource => resource !== null);
+}
+
 async function extractPage(url: string, timeout: number): Promise<ExtractedPage> {
   const browser = await chromium.launch({ headless: true });
 
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
-    const failedResources = new Map<string, { url: string; status: number | null; type: string }>();
+    const failedResources = new Map<string, FailedResource>();
     const scriptErrors: string[] = [];
     page.on("response", (resourceResponse) => {
       const type = resourceResponse.request().resourceType();
@@ -1185,7 +1227,7 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
       const type = request.resourceType();
       const errorText = request.failure()?.errorText ?? "";
       if (trackedResourceTypes.has(type) && !request.url().startsWith("data:") && !/ERR_ABORTED|ERR_BLOCKED_BY_CLIENT/.test(errorText)) {
-        failedResources.set(request.url(), { url: request.url(), status: null, type });
+        failedResources.set(request.url(), { url: request.url(), status: null, type, ...(errorText ? { error: errorText } : {}) });
       }
     });
     page.on("pageerror", (error) => {
@@ -1286,13 +1328,18 @@ async function extractPage(url: string, timeout: number): Promise<ExtractedPage>
       };
     });
 
+    const settledResources = await recheckTemporaryFailures([...failedResources.values()], async (resourceUrl) => {
+      const recheck = await context.request.get(resourceUrl, { timeout: Math.min(timeout, 5_000), maxRedirects: 5, failOnStatusCode: false });
+      return recheck.status();
+    });
+
     await context.close();
 
     return {
       finalUrl: page.url(),
       httpStatus: response?.status() ?? null,
       ...extracted,
-      failedResources: [...failedResources.values()],
+      failedResources: settledResources,
       scriptErrors,
     };
   }
@@ -1657,19 +1704,12 @@ export function buildPageIssues(pageUrl: string, extracted: ExtractedPage, typoM
   }
 
   if (extracted.failedResources.length > 0) {
-    const pageHost = hostOf(pageUrl, pageUrl);
-    const ownFailures = extracted.failedResources.filter(resource => hostOf(resource.url, pageUrl) === pageHost);
-    const examples = extracted.failedResources.slice(0, 3).map(resource => `${resource.url} (${resource.status ?? "no response"})`).join(", ");
     issues.push({
       pageUrl,
       category: "broken_link",
       code: "broken_resource",
-      severity: ownFailures.length > 0 ? "error" : "warning",
       title: "Resources failed to load",
-      message: `${extracted.failedResources.length} ${extracted.failedResources.length === 1 ? "resource" : "resources"} failed to load: ${examples}${extracted.failedResources.length > 3 ? ", …" : ""}`,
-      evidence: {
-        resources: extracted.failedResources.slice(0, 20),
-      },
+      ...brokenResourceFields(pageUrl, extracted.failedResources),
     });
   }
 
@@ -2243,8 +2283,12 @@ export async function runAudit(
     return options.getTypoAllowlist ? await options.getTypoAllowlist() : [];
   }
 
+  async function getCurrentLinkIgnores() {
+    return options.getLinkIgnores ? await options.getLinkIgnores() : [];
+  }
+
   async function buildCancelledResult(stage: AuditProgress["stage"], currentUrl?: string): Promise<AuditEngineResult> {
-    const filteredIssues = filterTypoIssuesByAllowlist(issues, await getCurrentTypoAllowlist());
+    const filteredIssues = withoutIgnoredResources(filterTypoIssuesByAllowlist(issues, await getCurrentTypoAllowlist()), await getCurrentLinkIgnores());
     await emit(events, "warning", "Audit cancelled", {
       stage,
       currentUrl,
@@ -2425,7 +2469,7 @@ export async function runAudit(
   }
 
   // Ignored targets are never requested: they are usually sites that block bots, and checking them only slows the audit.
-  const linkIgnores = options.getLinkIgnores ? await options.getLinkIgnores() : [];
+  const linkIgnores = await getCurrentLinkIgnores();
   const uniqueLinks = dedupeUrls(links.map(link => link.targetUrl)).filter(url => !isLinkIgnored(url, linkIgnores));
   const ignoredLinkCount = links.filter(link => isLinkIgnored(link.targetUrl, linkIgnores)).length;
   if (ignoredLinkCount) {
@@ -2478,7 +2522,7 @@ export async function runAudit(
   await emit(events, "info", "Checking site health", {}, options.onEvent);
   issues.push(...await checkSiteHealth(normalizedBase, fetchImpl));
 
-  const filteredIssues = filterTypoIssuesByAllowlist(issues, await getCurrentTypoAllowlist());
+  const filteredIssues = withoutIgnoredResources(filterTypoIssuesByAllowlist(issues, await getCurrentTypoAllowlist()), await getCurrentLinkIgnores());
 
   let lighthouseSummary: LighthouseSummary | undefined;
   const lighthouseTargets = normalizeLighthouseTargets(normalizedBase, explicitLighthouseTargets);

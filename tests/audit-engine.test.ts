@@ -13,9 +13,11 @@ import {
   findFaviconHref,
   findOrphanPages,
   isCheckableLinkTarget,
+  isTemporaryResourceFailure,
   looksLikeFileUrl,
   parseRobotsForSitemaps,
   parseSitemapXml,
+  recheckTemporaryFailures,
   redirectsAwayFromSite,
   runAudit,
 } from "@website-auditor/audit-engine";
@@ -532,5 +534,64 @@ describe("redirect and sitemap checks", () => {
     );
 
     expect(issues).toEqual([]);
+  });
+});
+
+describe("recheckTemporaryFailures", () => {
+  const resource = (url: string, status: number | null, error?: string) => ({ url, status, type: "script", ...(error ? { error } : {}) });
+
+  it("treats rate limits, server errors and dropped connections as temporary", () => {
+    expect(isTemporaryResourceFailure(resource("https://a.test/x.js", 502))).toBe(true);
+    expect(isTemporaryResourceFailure(resource("https://a.test/x.js", 429))).toBe(true);
+    expect(isTemporaryResourceFailure(resource("https://a.test/x.js", null, "net::ERR_CONNECTION_RESET"))).toBe(true);
+    expect(isTemporaryResourceFailure(resource("https://a.test/x.js", 404))).toBe(false);
+    expect(isTemporaryResourceFailure(resource("https://a.test/x.js", null, "net::ERR_BLOCKED_BY_ORB"))).toBe(false);
+  });
+
+  it("drops resources that load on a second try and keeps the rest", async () => {
+    const statuses: Record<string, number> = { "https://a.test/flaky.js": 200, "https://a.test/down.js": 503 };
+    const fetched: string[] = [];
+    const result = await recheckTemporaryFailures([
+      resource("https://a.test/flaky.js", 502),
+      resource("https://a.test/down.js", 502),
+      resource("https://a.test/missing.js", 404),
+    ], async (url) => {
+      fetched.push(url);
+      return statuses[url] ?? 500;
+    }, 0);
+
+    expect(result).toEqual([resource("https://a.test/down.js", 503), resource("https://a.test/missing.js", 404)]);
+    expect(fetched.sort()).toEqual(["https://a.test/down.js", "https://a.test/flaky.js"]);
+  });
+
+  it("stops retrying a host once one of its retries fails", async () => {
+    const fetched: string[] = [];
+    const failures = Array.from({ length: 12 }, (_, index) => resource(`https://down.test/${index}.js`, 502));
+    const result = await recheckTemporaryFailures([...failures, resource("https://ok.test/a.js", 502)], async (url) => {
+      fetched.push(url);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      return url.startsWith("https://ok.test/") ? 200 : 503;
+    }, 0);
+
+    expect(result).toHaveLength(12);
+    expect(fetched).toContain("https://ok.test/a.js");
+    expect(fetched.filter(url => url.startsWith("https://down.test/")).length).toBeLessThan(12);
+  });
+
+  it("keeps a resource whose second request throws", async () => {
+    const failed = resource("https://a.test/x.js", null, "net::ERR_TIMED_OUT");
+    await expect(recheckTemporaryFailures([failed], async () => {
+      throw new Error("offline");
+    }, 0)).resolves.toEqual([failed]);
+  });
+
+  it("skips the second request when nothing failed temporarily", async () => {
+    let calls = 0;
+    const missing = resource("https://a.test/missing.js", 404);
+    await expect(recheckTemporaryFailures([missing], async () => {
+      calls += 1;
+      return 200;
+    })).resolves.toEqual([missing]);
+    expect(calls).toBe(0);
   });
 });

@@ -2,7 +2,7 @@ import type { CallToolResult } from "@modelcontextprotocol/server";
 import type { ApiTokenScope } from "@website-auditor/shared";
 
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
-import { apiTokenScopes, issueCategories, issueSeverities, parseLinkIgnore } from "@website-auditor/shared";
+import { apiTokenScopes, issueCategories, issueSeverities, linkIgnoreScopes, parseLinkIgnore } from "@website-auditor/shared";
 import { z } from "zod";
 
 import { apiErrorData, compactEvidence, describeApiError, mapWithConcurrency, paginate, severityRank, truncate } from "./format.js";
@@ -462,16 +462,17 @@ function registerWebsiteTools(server: McpServer, api: ApiCaller) {
   });
 
   server.registerTool("ignore_broken_links", {
-    title: "Ignore broken links",
-    description: "Stops future audits of the audit's website from reporting these links as broken, and clears them from this audit. Use it for links that only fail for crawlers, not for real breakage.",
+    title: "Ignore broken links and resources",
+    description: "Clears broken links and failed page resources (scripts, stylesheets, images and the like) from an audit. Use scope \"audit\" for one-off failures, such as a host that was briefly down: future audits still check them. Use scope \"website\" for targets that only ever fail for crawlers: the rule is saved and future audits skip them. Don't use either for real breakage.",
     inputSchema: z.object({
-      auditId: z.string().describe("The audit the broken links were found in."),
-      links: z.array(z.string()).min(1).max(50).describe("A full URL ignores that one link; a bare domain such as example.com ignores every link to it and its subdomains."),
+      auditId: z.string().describe("The audit the broken links or resources were found in."),
+      links: z.array(z.string()).min(1).max(50).describe("A full URL ignores that one link or resource; a bare domain such as example.com ignores everything on it and its subdomains."),
+      scope: z.enum(linkIgnoreScopes).describe("\"audit\" dismisses them from this audit only; \"website\" also saves the rule so future audits skip them."),
     }),
     annotations: clearsFindings,
-  }, async ({ auditId, links }) => {
+  }, async ({ auditId, links, scope }) => {
     const results: Array<{ link: string; ignored?: { kind: string; value: string }; error?: string }> = [];
-    // One at a time: each request rewrites the website's ignore list, so parallel requests would drop rules.
+    // One at a time: each request rewrites the ignore list, so parallel requests would drop rules.
     for (const link of unique(links)) {
       const rule = parseLinkIgnore(link);
       if (!rule) {
@@ -479,14 +480,14 @@ function registerWebsiteTools(server: McpServer, api: ApiCaller) {
         continue;
       }
       try {
-        await api(auditPath(auditId, "/link-ignores"), { method: "POST", body: rule });
+        await api(auditPath(auditId, "/link-ignores"), { method: "POST", body: { ...rule, scope } });
         results.push({ link, ignored: rule });
       }
       catch (error) {
         results.push({ link, error: describeApiError(error) });
       }
     }
-    return batchResult(results, { auditId });
+    return batchResult(results, { auditId, scope });
   });
 }
 

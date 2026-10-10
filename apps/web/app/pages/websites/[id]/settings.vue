@@ -627,7 +627,7 @@ function describeRule(rule: DiscoveryEntryRow["matchedRule"]) {
                 <h2 id="ignored-links-heading">
                   Ignored links
                 </h2>
-                <p>Links that are never checked or reported as broken. Useful for sites that block automated checks.</p>
+                <p>Links and page resources that are never checked or reported as broken. Useful for sites that block automated checks.</p>
               </div>
             </div>
             <div class="panel-body stack">
