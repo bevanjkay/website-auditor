@@ -1,6 +1,6 @@
 import { brokenLinkTarget, countIssuesBySeverity, getPreviousCompletedAuditRun, listAuditIssuesForRun } from "@website-auditor/db";
 
-import { compareIssueSets, isLinkIgnored, issueComparisonKey, linkIgnoresSchema } from "@website-auditor/shared";
+import { compareIssueSets, failedResourcesFromEvidence, isLinkIgnored, issueComparisonKey, linkIgnoresSchema } from "@website-auditor/shared";
 
 export async function getAuditComparison(auditRun: { id: string; websiteId: string; startedAt: Date | null; finishedAt: Date | null; linkIgnoresJson: unknown }) {
   const [currentIssues, previousRun] = await Promise.all([
@@ -16,9 +16,18 @@ export async function getAuditComparison(auditRun: { id: string; websiteId: stri
     listAuditIssuesForRun(previousRun.id),
     countIssuesBySeverity([previousRun.id]),
   ]);
-  // Links ignored since the previous audit were not fixed, so leave them out of the comparison.
+  // Links and resources ignored since the previous audit were not fixed, so leave them out of the comparison.
   const linkIgnores = linkIgnoresSchema.parse(auditRun.linkIgnoresJson ?? []);
-  const comparablePrevious = previousIssues.filter(issue => issue.code !== "broken_link" || !isLinkIgnored(brokenLinkTarget(issue), linkIgnores));
+  const comparablePrevious = previousIssues.filter((issue) => {
+    if (issue.code === "broken_link") {
+      return !isLinkIgnored(brokenLinkTarget(issue), linkIgnores);
+    }
+    if (issue.code === "broken_resource") {
+      const resources = failedResourcesFromEvidence(issue.evidenceJson);
+      return !resources.length || !resources.every(resource => isLinkIgnored(resource.url, linkIgnores));
+    }
+    return true;
+  });
   const { newKeys, fixed } = compareIssueSets(currentIssues, comparablePrevious);
 
   return {

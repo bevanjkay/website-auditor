@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { groupIssues } from "@website-auditor/shared";
+import type { LinkIgnoreScope } from "@website-auditor/shared";
+
+import { failedResourcesFromEvidence, groupIssues } from "@website-auditor/shared";
 
 type TabId = "issues" | "links" | "lighthouse" | "pages" | "log";
 type LighthouseCategory = "performance" | "accessibility" | "best-practices" | "seo";
@@ -366,17 +368,17 @@ function hostOfUrl(url: string) {
 }
 
 const linkIgnorePending = ref<string | null>(null);
-const linkNotice = ref<{ tone: "success" | "error"; message: string } | null>(null);
+const linkNotice = ref<{ tone: "success" | "error"; message: string; scope?: LinkIgnoreScope } | null>(null);
 
-async function ignoreLink(kind: "url" | "domain", value: string) {
-  linkIgnorePending.value = `${kind}:${value}`;
+async function ignoreLink(kind: "url" | "domain", value: string, scope: LinkIgnoreScope) {
+  linkIgnorePending.value = `${scope}:${kind}:${value}`;
   linkNotice.value = null;
   try {
-    await $fetch(`/api/audits/${auditId.value}/link-ignores`, { method: "POST", body: { kind, value } });
-    linkNotice.value = {
-      tone: "success",
-      message: `${kind === "domain" ? `Links to ${value}` : value} will be ignored. They're removed from this report and future audits won't check them.`,
-    };
+    await $fetch(`/api/audits/${auditId.value}/link-ignores`, { method: "POST", body: { kind, value, scope } });
+    const target = kind === "domain" ? `Everything from ${value}` : value;
+    linkNotice.value = scope === "audit"
+      ? { tone: "success", message: `${target} is dismissed from this audit. Future audits will still check it.`, scope }
+      : { tone: "success", message: `${target} will be ignored. It's removed from this report and future audits won't check it.`, scope };
     await Promise.all([refreshRun(), refreshIssues(), refreshLinks(), refreshComparison()]);
   }
   catch (error) {
@@ -443,9 +445,36 @@ const brokenLinkGroups = computed(() => {
 
 const linkLimit = ref(50);
 
+function isSiteHost(url: string) {
+  return hostOfUrl(url) === siteHost.value.replace(/^www\./, "");
+}
+
+const brokenResourceGroups = computed(() => {
+  const groups = new Map<string, { targetUrl: string; status: number | null; type: string; pages: Array<{ url: string; title: string }> }>();
+  for (const issue of issues.value) {
+    const pageUrl = issue.pageUrl;
+    if (issue.code !== "broken_resource" || !pageUrl) {
+      continue;
+    }
+    for (const resource of failedResourcesFromEvidence(issue.evidenceJson)) {
+      const group = groups.get(resource.url) ?? { targetUrl: resource.url, status: resource.status, type: resource.type, pages: [] };
+      if (!group.pages.some(page => page.url === pageUrl)) {
+        group.pages.push({ url: pageUrl, title: pageTitleByUrl.value.get(pageUrl) ?? pageUrl });
+      }
+      groups.set(resource.url, group);
+    }
+  }
+  return [...groups.values()].sort((left, right) =>
+    Number(isSiteHost(right.targetUrl)) - Number(isSiteHost(left.targetUrl))
+    || right.pages.length - left.pages.length
+    || left.targetUrl.localeCompare(right.targetUrl));
+});
+
+const resourceLimit = ref(50);
+
 const tabs = computed<Array<{ id: TabId; label: string; short: string; count: number | null }>>(() => [
   { id: "issues", label: "Issues", short: "Issues", count: issues.value.length },
-  { id: "links", label: "Broken links", short: "Links", count: brokenLinkGroups.value.length },
+  { id: "links", label: "Broken links", short: "Links", count: brokenLinkGroups.value.length + brokenResourceGroups.value.length },
   { id: "lighthouse", label: "Lighthouse", short: "Lighthouse", count: lighthouseResults.value.length },
   { id: "pages", label: "Pages", short: "Pages", count: pages.value.length },
   { id: "log", label: "Activity log", short: "Log", count: null },
@@ -1382,7 +1411,7 @@ onBeforeUnmount(() => {
             >
               {{ linkNotice.message }}
               <template
-                v-if="linkNotice.tone === 'success'"
+                v-if="linkNotice.tone === 'success' && linkNotice.scope === 'website'"
                 #actions
               >
                 <NuxtLink
@@ -1422,29 +1451,13 @@ onBeforeUnmount(() => {
                     </span>
                   </summary>
                   <div class="disclosure-body stack-sm">
-                    <div class="row">
-                      <button
-                        type="button"
-                        class="btn btn-sm"
-                        :disabled="linkIgnorePending !== null"
-                        @click="ignoreLink('url', group.targetUrl)"
-                      >
-                        <AppIcon
-                          name="ban"
-                          :size="14"
-                        />
-                        Ignore this URL
-                      </button>
-                      <button
-                        v-if="hostOfUrl(group.targetUrl) && hostOfUrl(group.targetUrl) !== siteHost.replace(/^www\./, '')"
-                        type="button"
-                        class="btn btn-sm btn-ghost"
-                        :disabled="linkIgnorePending !== null"
-                        @click="ignoreLink('domain', hostOfUrl(group.targetUrl))"
-                      >
-                        Ignore all links to {{ hostOfUrl(group.targetUrl) }}
-                      </button>
-                    </div>
+                    <IgnoreActions
+                      :target-url="group.targetUrl"
+                      :host="hostOfUrl(group.targetUrl)"
+                      :show-host="Boolean(hostOfUrl(group.targetUrl)) && !isSiteHost(group.targetUrl)"
+                      :disabled="linkIgnorePending !== null"
+                      @ignore="ignoreLink"
+                    />
                     <ul class="occurrence-list">
                       <li
                         v-for="source in group.sources"
@@ -1487,16 +1500,99 @@ onBeforeUnmount(() => {
                 </div>
               </div>
             </template>
+            <p
+              v-else-if="brokenResourceGroups.length"
+              class="text-sm text-secondary"
+            >
+              Every link checked in this audit responded successfully.
+            </p>
+
+            <template v-if="brokenResourceGroups.length">
+              <div class="stack-sm">
+                <div class="section-heading">
+                  <h3>Resources that failed to load</h3>
+                </div>
+                <p class="text-sm text-secondary">
+                  {{ pluralize(brokenResourceGroups.length, 'resource') }}, such as scripts, stylesheets and images, failed to load on the pages below. Resources on this site first.
+                </p>
+              </div>
+              <div class="disclosure-list">
+                <details
+                  v-for="group in brokenResourceGroups.slice(0, resourceLimit)"
+                  :key="group.targetUrl"
+                  class="disclosure"
+                >
+                  <summary>
+                    <AppIcon
+                      name="chevron-right"
+                      class="disclosure-chevron"
+                    />
+                    <span class="disclosure-title">
+                      <StatusBadge
+                        :label="formatHttpStatus(group.status)"
+                        :tone="isSiteHost(group.targetUrl) ? 'error' : 'warning'"
+                      />
+                      <strong class="mono text-sm">{{ group.targetUrl }}</strong>
+                    </span>
+                    <span class="disclosure-meta">
+                      <span>{{ humanise(group.type) }}</span>
+                      <span>{{ pluralize(group.pages.length, 'page') }}</span>
+                    </span>
+                  </summary>
+                  <div class="disclosure-body stack-sm">
+                    <IgnoreActions
+                      :target-url="group.targetUrl"
+                      :host="hostOfUrl(group.targetUrl)"
+                      :show-host="Boolean(hostOfUrl(group.targetUrl)) && !isSiteHost(group.targetUrl)"
+                      :disabled="linkIgnorePending !== null"
+                      @ignore="ignoreLink"
+                    />
+                    <ul class="occurrence-list">
+                      <li
+                        v-for="page in group.pages"
+                        :key="page.url"
+                        class="occurrence"
+                      >
+                        <div class="occurrence-head">
+                          <div class="cell-primary">
+                            <strong>{{ page.title }}</strong>
+                            <a
+                              :href="page.url"
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              class="mono text-sm"
+                            >{{ page.url }}</a>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </details>
+                <div
+                  v-if="brokenResourceGroups.length > resourceLimit"
+                  class="show-more"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-sm"
+                    @click="resourceLimit += 50"
+                  >
+                    Show more ({{ brokenResourceGroups.length - resourceLimit }} more)
+                  </button>
+                </div>
+              </div>
+            </template>
+
             <div
-              v-else
+              v-if="!brokenLinkGroups.length && !brokenResourceGroups.length"
               class="panel empty-state"
             >
               <AppIcon
                 name="check-circle"
                 :size="28"
               />
-              <h3>No broken links</h3>
-              <p>Every link checked in this audit responded successfully.</p>
+              <h3>No broken links or failed resources</h3>
+              <p>Every link checked in this audit responded successfully, and every page resource loaded.</p>
             </div>
           </div>
 

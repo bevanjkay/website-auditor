@@ -188,13 +188,24 @@ describe("mCP tools", () => {
   it("ignores broken links by URL or domain", async () => {
     const api = fakeApi({ "POST /api/audits/a1/link-ignores": () => ({ linkIgnores: [] }) });
 
-    const { data } = await callTool(api, allScopes, "ignore_broken_links", { auditId: "a1", links: ["facebook.com", "https://site.test/old#top", "mailto:hi@site.test"] });
+    const { data } = await callTool(api, allScopes, "ignore_broken_links", { auditId: "a1", links: ["facebook.com", "https://site.test/old#top", "mailto:hi@site.test"], scope: "website" });
     expect(data.results).toEqual([
       { link: "facebook.com", ignored: { kind: "domain", value: "facebook.com" } },
       { link: "https://site.test/old#top", ignored: { kind: "url", value: "https://site.test/old" } },
       { link: "mailto:hi@site.test", error: "Not a valid URL or domain." },
     ]);
     expect(api).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes the ignore scope through and requires one", async () => {
+    const api = fakeApi({ "POST /api/audits/a1/link-ignores": () => ({ linkIgnores: [] }) });
+
+    const { data } = await callTool(api, allScopes, "ignore_broken_links", { auditId: "a1", links: ["fluro.site"], scope: "audit" });
+    expect(data.scope).toBe("audit");
+    expect(api).toHaveBeenCalledWith("/api/audits/a1/link-ignores", { method: "POST", body: { kind: "domain", value: "fluro.site", scope: "audit" } });
+
+    const missingScope = await callTool(api, allScopes, "ignore_broken_links", { auditId: "a1", links: ["fluro.site"] });
+    expect(missingScope.isError).toBe(true);
   });
 
   it("turns API errors into tool errors", async () => {

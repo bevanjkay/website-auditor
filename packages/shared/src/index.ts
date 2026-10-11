@@ -48,6 +48,12 @@ export const linkIgnoreSchema = z.object({
 });
 export const linkIgnoresSchema = z.array(linkIgnoreSchema).max(200).default([]);
 export type LinkIgnore = z.infer<typeof linkIgnoreSchema>;
+export const linkIgnoreScopes = ["audit", "website"] as const;
+export type LinkIgnoreScope = (typeof linkIgnoreScopes)[number];
+// `audit` dismisses a target for one audit only; `website` also saves the rule so future audits skip it.
+export const linkIgnoreRequestSchema = linkIgnoreSchema.extend({
+  scope: z.enum(linkIgnoreScopes).default("website"),
+});
 
 const domainPattern = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/;
 
@@ -104,6 +110,63 @@ export function isLinkIgnored(targetUrl: string, ignores: LinkIgnore[]): boolean
   return ignores.some(rule => rule.kind === "domain"
     ? host === rule.value || host.endsWith(`.${rule.value}`)
     : comparableUrl(rule.value) === target);
+}
+
+export interface FailedResource {
+  url: string;
+  status: number | null;
+  type: string;
+  error?: string;
+}
+
+const failedResourcesSchema = z.array(z.object({
+  url: z.string(),
+  status: z.number().nullable(),
+  type: z.string(),
+  error: z.string().optional(),
+})).catch([]);
+
+export function failedResourcesFromEvidence(evidence: unknown): FailedResource[] {
+  const resources = evidence && typeof evidence === "object" ? (evidence as { resources?: unknown }).resources : undefined;
+  return failedResourcesSchema.parse(resources ?? []);
+}
+
+function hostOf(url: string, base?: string): string | null {
+  try {
+    return new URL(url, base).host.toLowerCase();
+  }
+  catch {
+    return null;
+  }
+}
+
+// A failure on the page's own host is an error; one on a third-party host is a warning.
+export function brokenResourceFields(pageUrl: string, resources: FailedResource[]): Pick<AuditIssueRecord, "severity" | "message" | "evidence"> {
+  const pageHost = hostOf(pageUrl);
+  const examples = resources.slice(0, 3).map(resource => `${resource.url} (${resource.status ?? "no response"})`).join(", ");
+  return {
+    severity: resources.some(resource => hostOf(resource.url, pageUrl) === pageHost) ? "error" : "warning",
+    message: `${resources.length} ${resources.length === 1 ? "resource" : "resources"} failed to load: ${examples}${resources.length > 3 ? ", …" : ""}`,
+    evidence: { resources: resources.slice(0, 20) },
+  };
+}
+
+export function withoutIgnoredResources(issues: AuditIssueRecord[], ignores: LinkIgnore[]): AuditIssueRecord[] {
+  if (!ignores.length) {
+    return issues;
+  }
+
+  return issues.flatMap((issue) => {
+    if (issue.code !== "broken_resource" || !issue.pageUrl) {
+      return [issue];
+    }
+    const resources = failedResourcesFromEvidence(issue.evidence);
+    const remaining = resources.filter(resource => !isLinkIgnored(resource.url, ignores));
+    if (remaining.length === resources.length) {
+      return [issue];
+    }
+    return remaining.length ? [{ ...issue, ...brokenResourceFields(issue.pageUrl, remaining) }] : [];
+  });
 }
 
 export const websiteInputSchema = z.object({

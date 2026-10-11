@@ -16,7 +16,7 @@ export const mcpTools: McpToolSummary[] = [
   { name: "start_audits", scope: "audit:run", summary: "Start audits for one or more websites." },
   { name: "stop_audits", scope: "audit:run", summary: "Stop one or more queued or running audits." },
   { name: "allow_typo_words", scope: "websites:write", summary: "Add words to a website's typo allowlist and clear them from the audit." },
-  { name: "ignore_broken_links", scope: "websites:write", summary: "Ignore broken links by URL or domain and clear them from the audit." },
+  { name: "ignore_broken_links", scope: "websites:write", summary: "Ignore broken links and failed resources by URL or domain, for one audit or for good." },
 ];
 
 export function mcpToolsForScopes(scopes: readonly ApiTokenScope[]): McpToolSummary[] {
