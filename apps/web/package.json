@@ -8,18 +8,18 @@
     "start": "node --max-old-space-size=2048 .output/server/index.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "^2.3.1",
+    "@modelcontextprotocol/server": "^2.4.0",
     "@website-auditor/audit-engine": "workspace:*",
     "@website-auditor/db": "workspace:*",
     "@website-auditor/shared": "workspace:*",
-    "bullmq": "^6.3.8",
-    "h3": "^1.15.4",
+    "bullmq": "^6.4.2",
+    "h3": "^2.0.8",
     "nuxt": "^4.6.2",
     "vue": "^3.5.43",
     "vue-router": "^5.3.1",
-    "zod": "^4.6.6"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "vue-tsc": "^3.3.11"
+    "vue-tsc": "^3.3.13"
   }
 }
